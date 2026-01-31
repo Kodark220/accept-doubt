@@ -4,21 +4,22 @@ import { GameMode, TOTAL_ROUNDS } from './constants';
 import { redirect } from 'next/navigation';
 
 type GamePageProps = {
-  searchParams?: {
+  searchParams: Promise<{
     mode?: GameMode;
     username?: string;
     seed?: string;
-  };
+  }>;
 };
 
-export default function GamePage({ searchParams }: GamePageProps) {
-  const requestedMode: GameMode = searchParams?.mode === 'multi' ? 'multi' : 'single';
-  const rawName = typeof searchParams?.username === 'string' ? searchParams.username : '';
+export default async function GamePage({ searchParams }: GamePageProps) {
+  const params = await searchParams;
+  const requestedMode: GameMode = params?.mode === 'multi' ? 'multi' : 'single';
+  const rawName = typeof params?.username === 'string' ? params.username : '';
   const username = rawName.trim();
   if (!username) {
     redirect('/');
   }
-  const seed = typeof searchParams?.seed === 'string' && searchParams.seed ? searchParams.seed : `${username}-${requestedMode}`;
+  const seed = typeof params?.seed === 'string' && params.seed ? params.seed : `${username}-${requestedMode}`;
   const initialQueue = buildScenarioQueue(
     TOTAL_ROUNDS,
     seed
