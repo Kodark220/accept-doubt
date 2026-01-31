@@ -27,17 +27,6 @@ type PendingRound = {
   playerChoice: 'trust' | 'doubt';
   consensus: ConsensusResult;
 };
-                        <button
-                          onClick={handleSubmitScore}
-                          disabled={submittingScore}
-                          className="w-full rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-base font-semibold tracking-[0.2em] text-white disabled:opacity-50"
-                        >
-                          {submittingScore ? '⏳ Submitting to GenLayer...' : '📝 Sign & Submit Score'}
-                        </button>
-                      )}
-                    </div>
-                  </>
-                )}
                 <button
                   onClick={restartGame}
                   className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
