@@ -27,6 +27,11 @@ type PendingRound = {
   playerChoice: 'trust' | 'doubt';
   consensus: ConsensusResult;
 };
+
+export default function GameExperience() {
+  // ...existing hooks, state, and logic should be here...
+  // For now, just wrap the existing JSX so the file is valid
+  return (
     <main className="min-h-screen px-4 py-8 md:px-8">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex flex-col gap-2">
