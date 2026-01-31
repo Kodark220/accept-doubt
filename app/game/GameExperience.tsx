@@ -139,9 +139,8 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
 
 
   const [activePanel, setActivePanel] = useState<'play'|'history'>('play');
-  const panelOptions: { id: 'play' | 'history'; label: string }[] = [
-    { id: 'play', label: 'Play' },
-    { id: 'history', label: 'History' }
+  const panelOptions: { id: 'play'; label: string }[] = [
+    { id: 'play', label: 'Play' }
   ];
 
   // No-op handlers used by UI
@@ -466,34 +465,6 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
             </div>
             <div className="space-y-4">
               {activePanel === 'play' && <ChatPanel />}
-              {activePanel === 'history' && (
-                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-3">
-                  <p className="text-xs uppercase tracking-[0.3em] text-genlayer-accent">Round history</p>
-                  {gameState.history.length === 0 ? (
-                    <p className="text-sm text-gray-300">No rounds completed yet, so nothing to replay.</p>
-                  ) : (
-                    gameState.history
-                      .slice(-4)
-                      .reverse()
-                      .map((entry, index) => (
-                        <div key={`${entry.scenario.id}-${index}`} className="text-sm text-gray-200">
-                          <p className="font-semibold">{entry.scenario.text}</p>
-                          <p className="text-xs text-white/60">
-                            You chose {entry.playerChoice}. Consensus {entry.consensus}.
-                          </p>
-                          <p className="text-xs">
-                            {entry.correct ? 'Match' : 'Mismatch'} - Confidence {Math.round(entry.consensusConfidence * 100)}%
-                          </p>
-                          {entry.appeal && (
-                            <p className="text-xs text-genlayer-accent">
-                              Appeal: {entry.appeal.success ? 'succeeded' : 'denied'}. {entry.appeal.detail}
-                            </p>
-                          )}
-                        </div>
-                      ))
-                  )}
-                </div>
-              )}
             </div>
           </div>
         </div>
