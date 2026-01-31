@@ -239,7 +239,38 @@ export default function GameExperience({
         </section>
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            {currentScenario ? (
+            {gameOver ? (
+              // GAME OVER - Show final score prominently
+              <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-6">
+                <p className="text-xs uppercase tracking-[0.5em] text-genlayer-accent">🎉 Game Complete!</p>
+                <h2 className="text-4xl font-bold text-white">Final Score</h2>
+                <div className="text-6xl font-bold text-genlayer-blue">{gameState.xp} XP</div>
+                <div className="grid grid-cols-2 gap-4 text-left">
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-xs text-gray-400 uppercase">Accuracy</p>
+                    <p className="text-2xl font-bold text-white">{leaderboard.accuracy}%</p>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-xs text-gray-400 uppercase">Correct</p>
+                    <p className="text-2xl font-bold text-white">{gameState.correct}/{TOTAL_ROUNDS}</p>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-xs text-gray-400 uppercase">Player</p>
+                    <p className="text-xl font-bold text-white truncate">{initialUsername}</p>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-xs text-gray-400 uppercase">Appeals Won</p>
+                    <p className="text-2xl font-bold text-white">{gameState.appealsWon}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={restartGame}
+                  className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
+                >
+                  Play Again
+                </button>
+              </section>
+            ) : currentScenario ? (
               <>
                 <ScenarioDisplay
                   current={currentScenario}
@@ -261,41 +292,45 @@ export default function GameExperience({
                 <p className="text-sm text-gray-200">Loading claim...</p>
               </section>
             )}
-            <Voting disabled={!canVoteWithTimer} onVote={handleVote} />
-            {pendingRound && pendingRound.playerChoice !== pendingRound.consensus.consensus && (
-              <AppealResolution
-                confidence={pendingRound.consensus.confidence}
-                appealAttempted={false}
-                onAppeal={requestAppeal}
-              />
+            {!gameOver && (
+              <>
+                <Voting disabled={!canVoteWithTimer} onVote={handleVote} />
+                {pendingRound && pendingRound.playerChoice !== pendingRound.consensus.consensus && (
+                  <AppealResolution
+                    confidence={pendingRound.consensus.confidence}
+                    appealAttempted={false}
+                    onAppeal={requestAppeal}
+                  />
+                )}
+                <RoundResults
+                  lastRound={lastRound}
+                  pending={
+                    pendingRound
+                      ? {
+                          consensus: pendingRound.consensus.consensus,
+                          confidence: pendingRound.consensus.confidence,
+                          playerChoice: pendingRound.playerChoice
+                        }
+                      : undefined
+                  }
+                />
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleNextClick}
+                    disabled={gameOver}
+                    className="flex-1 rounded-2xl border border-white/30 py-3 text-sm font-semibold uppercase tracking-[0.4em] disabled:opacity-40"
+                  >
+                    {gameOver ? 'Game complete' : 'Next claim'}
+                  </button>
+                  <button
+                    onClick={restartGame}
+                    className="flex-1 rounded-2xl border border-white/20 py-3 text-sm font-semibold uppercase tracking-[0.4em]"
+                  >
+                    Restart
+                  </button>
+                </div>
+              </>
             )}
-            <RoundResults
-              lastRound={lastRound}
-              pending={
-                pendingRound
-                  ? {
-                      consensus: pendingRound.consensus.consensus,
-                      confidence: pendingRound.consensus.confidence,
-                      playerChoice: pendingRound.playerChoice
-                    }
-                  : undefined
-              }
-            />
-            <div className="flex gap-3">
-              <button
-                onClick={handleNextClick}
-                disabled={gameOver}
-                className="flex-1 rounded-2xl border border-white/30 py-3 text-sm font-semibold uppercase tracking-[0.4em] disabled:opacity-40"
-              >
-                {gameOver ? 'Game complete' : 'Next claim'}
-              </button>
-              <button
-                onClick={restartGame}
-                className="flex-1 rounded-2xl border border-white/20 py-3 text-sm font-semibold uppercase tracking-[0.4em]"
-              >
-                Restart
-              </button>
-            </div>
           </div>
           <div>
             {gameOver ? (
