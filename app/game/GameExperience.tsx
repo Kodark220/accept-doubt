@@ -53,25 +53,90 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
   };
 
   const [showWalletOptions, setShowWalletOptions] = useState(false);
-  const [gameOver] = useState(false);
-  const [currentScenario] = useState<ScenarioClaim | null>(dailyScenario as ScenarioClaim);
-  const [timer] = useState(30);
-  const [timedOut] = useState(false);
-  const [canVoteWithTimer] = useState(true);
+  const [scenarioQueue, setScenarioQueue] = useState<ScenarioClaim[]>(
+    initialQueue && initialQueue.length ? initialQueue : buildScenarioQueue(TOTAL_ROUNDS, `${initialUsername}-${initialMode}-${Date.now()}`)
+  );
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const currentScenario = scenarioQueue[currentIndex] ?? (dailyScenario as ScenarioClaim);
+
+  const [timer, setTimer] = useState(30);
+  const [timedOut, setTimedOut] = useState(false);
+  const [canVoteWithTimer, setCanVoteWithTimer] = useState(true);
   const [pendingRound, setPendingRound] = useState<PendingRound | null>(null);
   const [lastRound, setLastRound] = useState<RoundHistory | undefined>(undefined);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [submittingScore, setSubmittingScore] = useState(false);
-  const [txHash] = useState<string | undefined>(undefined);
-  const handleSubmitScore = async () => {};
-  const handleVote = (choice: 'trust'|'doubt') => {};
-  const requestAppeal = async () => {};
-  const handleNextClick = () => {};
-  const restartGame = () => {};
+  const [txHash, setTxHash] = useState<string | undefined>(undefined);
+  const [gameOver, setGameOver] = useState(false);
+  const [readyForNext, setReadyForNext] = useState(false);
 
-  const leaderboard = { score: 0, accuracy: 0, xp: 0, appealsWon: 0 };
+  const [gameState, setGameState] = useState(initialGameState(TOTAL_ROUNDS));
+
+  const leaderboard = leaderboardSnapshot(gameState);
   const score = leaderboard.score;
-  const currentRoundNumber = 1;
+  const currentRoundNumber = Math.min(currentIndex + 1, scenarioQueue.length);
+
+  const handleSubmitScore = async () => {
+    if (!isConnected) throw new Error('No wallet');
+    const result = await submitFinalScore(walletAddress, initialUsername, gameState.xp, gameState.correct, TOTAL_ROUNDS);
+    if (result?.hash) setTxHash(result.hash);
+    if (result?.confirmed) setScoreSubmitted(true);
+  };
+
+  const handleVote = async (choice: 'trust' | 'doubt') => {
+    if (!currentScenario) return;
+    setCanVoteWithTimer(false);
+
+    // Get consensus (contract or mock)
+    const consensus = await resolveConsensus(currentScenario);
+
+    const pending: PendingRound = { scenario: currentScenario, playerChoice: choice, consensus };
+    setPendingRound(pending);
+
+    // Record provisional round (no appeal yet)
+    const newState = recordRound(gameState, currentScenario, choice, consensus);
+    setGameState(newState);
+    setLastRound(newState.history[newState.history.length - 1]);
+    setReadyForNext(true);
+  };
+
+  const requestAppeal = async () => {
+    if (!pendingRound) return;
+    const outcome = await resolveAppeal(pendingRound.consensus);
+    // Update last round with appeal outcome by re-recording (simplified)
+    const newState = recordRound(gameState, pendingRound.scenario, pendingRound.playerChoice, pendingRound.consensus, outcome);
+    setGameState(newState);
+    setLastRound(newState.history[newState.history.length - 1]);
+    setPendingRound(null);
+    setReadyForNext(true);
+  };
+
+  const handleNextClick = () => {
+    if (currentIndex < scenarioQueue.length - 1) {
+      setCurrentIndex((prev) => prev + 1);
+      setPendingRound(null);
+      setReadyForNext(false);
+      setCanVoteWithTimer(true);
+      setTimer(30);
+    } else {
+      setGameOver(true);
+    }
+  };
+
+  const restartGame = () => {
+    const newSeed = `${initialUsername}-${initialMode}-${Date.now()}`;
+    setScenarioQueue(buildScenarioQueue(TOTAL_ROUNDS, newSeed));
+    setGameState(initialGameState(TOTAL_ROUNDS));
+    setCurrentIndex(0);
+    setPendingRound(null);
+    setLastRound(undefined);
+    setReadyForNext(false);
+    setGameOver(false);
+    setTimer(30);
+    setTimedOut(false);
+    setCanVoteWithTimer(true);
+  };
+
 
   const [activePanel, setActivePanel] = useState<'play'|'history'>('play');
   const panelOptions: { id: 'play' | 'history'; label: string }[] = [
