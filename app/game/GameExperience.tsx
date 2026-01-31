@@ -144,15 +144,6 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     { id: 'history', label: 'History' }
   ];
 
-  const gameState = {
-    correct: 0,
-    appealsWon: 0,
-    correctTrusts: 0,
-    correctDoubts: 0,
-    xp: 0,
-    history: [] as RoundHistory[]
-  };
-
   // No-op handlers used by UI
   const handleSubmitScoreSafe = async () => {
     setSubmittingScore(true);
