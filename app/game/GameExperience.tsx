@@ -66,6 +66,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
   const [lastRound, setLastRound] = useState<RoundHistory | undefined>(undefined);
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [submittingScore, setSubmittingScore] = useState(false);
+  const [scorePending, setScorePending] = useState(false);
   const [txHash, setTxHash] = useState<string | undefined>(undefined);
   const [gameOver, setGameOver] = useState(false);
   const [readyForNext, setReadyForNext] = useState(false);
@@ -78,9 +79,24 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
 
   const handleSubmitScore = async () => {
     if (!isConnected) throw new Error('No wallet');
-    const result = await submitFinalScore(walletAddress, initialUsername, leaderboard.xp, gameState.correct, TOTAL_ROUNDS);
-    if (result?.hash) setTxHash(result.hash);
-    if (result?.confirmed) setScoreSubmitted(true);
+    setSubmittingScore(true);
+    setScorePending(true);
+    try {
+      const result = await submitFinalScore(walletAddress, initialUsername, leaderboard.xp, gameState.correct, TOTAL_ROUNDS);
+      if (result?.hash) setTxHash(result.hash);
+      if (result?.confirmed) {
+        setScoreSubmitted(true);
+        setScorePending(false);
+      } else {
+        // Still pending confirmation
+        setScorePending(true);
+      }
+    } catch (err) {
+      console.error('Failed to submit score:', err);
+      setScorePending(false);
+    } finally {
+      setSubmittingScore(false);
+    }
   };
 
   const handleVote = async (choice: 'trust' | 'doubt') => {
@@ -262,12 +278,20 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                     </div>
                   </>
                 ) : (
-                  // UNCONFIRMED - Show full stats and submit option
+                  // UNCONFIRMED - Hide numeric score until confirmed on-chain
                   <>
                     <p className="text-xs uppercase tracking-[0.5em] text-genlayer-accent">🎉 Game Complete!</p>
                     <h2 className="text-4xl font-bold text-white">Final Score</h2>
-                    <div className="text-6xl font-bold text-genlayer-blue">{score} / 100</div>
-                    <div className="grid grid-cols-2 gap-4 text-left">
+                    <div className="text-6xl font-bold text-genlayer-blue">— / 100</div>
+                    <div className="mt-2 text-sm text-gray-400">
+                      {scorePending ? (
+                        <span>Score submitted — waiting for blockchain confirmation{txHash && ` (TX: ${txHash})`}.</span>
+                      ) : (
+                        <span>Score will be revealed after you submit it to GenLayer.</span>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-left mt-6">
                       <div className="bg-white/5 rounded-xl p-4">
                         <p className="text-xs text-gray-400 uppercase">Accuracy</p>
                         <p className="text-2xl font-bold text-white">{leaderboard.accuracy}%</p>
@@ -285,6 +309,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                         <p className="text-2xl font-bold text-white">{gameState.appealsWon}</p>
                       </div>
                     </div>
+
                     {/* Submit Score to Blockchain */}
                     <div className="border-t border-white/10 pt-6 space-y-3">
                       <p className="text-xs uppercase tracking-[0.3em] text-gray-400">
@@ -328,10 +353,10 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                       ) : (
                         <button
                           onClick={handleSubmitScore}
-                          disabled={submittingScore}
+                          disabled={submittingScore || scorePending}
                           className="w-full rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-base font-semibold tracking-[0.2em] text-white disabled:opacity-50"
                         >
-                          {submittingScore ? '⏳ Submitting to GenLayer...' : '📝 Sign & Submit Score'}
+                          {submittingScore ? '⏳ Submitting to GenLayer...' : scorePending ? '⏳ Pending confirmation...' : '📝 Sign & Submit Score'}
                         </button>
                       )}
                     </div>
