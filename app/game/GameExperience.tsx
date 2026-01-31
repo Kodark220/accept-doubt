@@ -27,22 +27,6 @@ type PendingRound = {
   playerChoice: 'trust' | 'doubt';
   consensus: ConsensusResult;
 };
-      setTimer((prev) => {
-        if (prev <= 1) {
-          clearCountdown();
-          setTimedOut(true);
-          setReadyForNext(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => {
-      clearCountdown();
-    };
-  }, [currentScenario, gameOver]);
-
-  return (
     <main className="min-h-screen px-4 py-8 md:px-8">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="flex flex-col gap-2">
