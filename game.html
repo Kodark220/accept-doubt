@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Trust or Doubt — Play</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="game-mode">
+  <header class="game-header">
+    <div class="layout">
+      <div class="brand-row">
+        <img class="brand-logo" src="logo.png" alt="GenLayer logo" width="120" height="48" />
+      </div>
+      <div>
+        <p class="eyebrow">GenLayer · Playtest</p>
+        <h1>Trust or Doubt</h1>
+      </div>
+      <div class="header-links">
+        <a class="ghost-link" href="index.html">← Back to overview</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="scoreboard-panel">
+      <div>
+        <p class="label">Total XP</p>
+        <p class="value" id="xp">0</p>
+      </div>
+      <div>
+        <p class="label">Accuracy</p>
+        <p class="value" id="accuracy">0%</p>
+      </div>
+      <div>
+        <p class="label">Correct Trusts</p>
+        <p class="value" id="trusts">0</p>
+      </div>
+      <div>
+        <p class="label">Correct Doubts</p>
+        <p class="value" id="doubts">0</p>
+      </div>
+    </section>
+
+    <section class="claim-panel">
+      <div class="round-indicator">
+        <span id="round">Round 0</span>
+        <span id="total-rounds">/ 5</span>
+      </div>
+      <div class="claim-card">
+        <p class="category" id="claim-category">Category</p>
+        <p class="claim" id="claim-text">Loading claim...</p>
+        <p class="claim-detail" id="claim-detail"></p>
+      </div>
+      <div class="choices">
+        <button id="trust-btn" class="choice trust" data-choice="trust">? Trust</button>
+        <button id="doubt-btn" class="choice doubt" data-choice="doubt">? Doubt</button>
+      </div>
+      <div class="appeal-row">
+        <div class="appeal-meter" aria-label="Appeal level">
+          <div id="appeal-level"></div>
+        </div>
+        <button id="appeal-btn" class="appeal-btn" disabled>Appeal</button>
+      </div>
+      <p class="validators" id="validator-status">Validators: ?</p>
+    </section>
+
+    <section class="verdict-panel" aria-live="polite">
+      <h2 id="verdict-title">Awaiting verdict...</h2>
+      <p id="verdict-detail"></p>
+      <div class="verdict-actions">
+        <button id="next-btn" class="primary" disabled>Next Round</button>
+        <button id="view-leaderboard-btn" class="secondary" disabled>View Final Leaderboard</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

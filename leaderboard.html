@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Trust or Doubt — Leaderboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="leaderboard-mode">
+  <header class="leaderboard-header">
+    <div class="layout">
+      <div class="brand-row">
+        <img class="brand-logo" src="logo.png" alt="GenLayer logo" width="120" height="48" />
+      </div>
+      <h1>Final Leaderboard</h1>
+      <div class="header-links">
+        <a class="ghost-link" href="index.html">Home</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="leaderboard-panel">
+      <div class="leaderboard-body">
+        <div>
+          <p class="label">Total XP</p>
+          <p class="value" id="final-xp">—</p>
+        </div>
+        <div>
+          <p class="label">Accuracy</p>
+          <p class="value" id="final-accuracy">—</p>
+        </div>
+        <div>
+          <p class="label">Correct Trusts</p>
+          <p class="value" id="final-trusts">—</p>
+        </div>
+        <div>
+          <p class="label">Correct Doubts</p>
+          <p class="value" id="final-doubts">—</p>
+        </div>
+        <div>
+          <p class="label">Appeals Won</p>
+          <p class="value" id="final-appeals">—</p>
+        </div>
+      </div>
+      <p class="leaderboard-note" id="leaderboard-note">
+        Play through five rounds to populate this page with your latest credentials.
+      </p>
+      <div class="leaderboard-actions">
+        <a class="btn primary" href="game.html">Play Another Game</a>
+        <button id="clear-results" class="btn ghost">Clear Stored Results</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="leaderboard.js"></script>
+</body>
+</html>
