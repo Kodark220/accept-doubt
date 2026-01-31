@@ -23,61 +23,10 @@ import {
 import { GameMode, TOTAL_ROUNDS } from './constants';
 
 type PendingRound = {
-          <div>
-            {gameOver ? (
-              // GAME OVER - Show final score prominently
-              <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-6">
-                {scoreSubmitted ? (
-                  // CONFIRMED SCORE - Show only the blockchain-confirmed score
-                  <>
-                    <div className="bg-green-500/10 border-2 border-green-500/50 rounded-2xl p-6 space-y-4">
-                      <p className="text-xs uppercase tracking-[0.5em] text-green-400">✅ Blockchain Confirmed</p>
-                      <h2 className="text-3xl font-bold text-white">Score on GenLayer</h2>
-                      <div className="text-7xl font-bold text-green-400">{gameState.xp} XP</div>
-                      <div className="text-lg text-white/80">
-                        <span className="font-semibold">{initialUsername}</span> • {leaderboard.accuracy}% Accuracy
-                      </div>
-                      {txHash && (
-                        <p className="text-xs text-gray-400 break-all pt-2 border-t border-white/10">
-                          TX: {txHash}
-                        </p>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  // UNCONFIRMED - Show full stats and submit option
-                  <>
-                    <p className="text-xs uppercase tracking-[0.5em] text-genlayer-accent">🎉 Game Complete!</p>
-                    <h2 className="text-4xl font-bold text-white">Final Score</h2>
-                    <div className="text-6xl font-bold text-genlayer-blue">{gameState.xp} XP</div>
-                    <div className="grid grid-cols-2 gap-4 text-left">
-                      <div className="bg-white/5 rounded-xl p-4">
-                        <p className="text-xs text-gray-400 uppercase">Accuracy</p>
-                        <p className="text-2xl font-bold text-white">{leaderboard.accuracy}%</p>
-                      </div>
-                      <div className="bg-white/5 rounded-xl p-4">
-                        <p className="text-xs text-gray-400 uppercase">Correct</p>
-                        <p className="text-2xl font-bold text-white">{gameState.correct}/{TOTAL_ROUNDS}</p>
-                      </div>
-                      <div className="bg-white/5 rounded-xl p-4">
-                        <p className="text-xs text-gray-400 uppercase">Player</p>
-                        <p className="text-xl font-bold text-white truncate">{initialUsername}</p>
-                      </div>
-                      <div className="bg-white/5 rounded-xl p-4">
-                        <p className="text-xs text-gray-400 uppercase">Appeals Won</p>
-                        <p className="text-2xl font-bold text-white">{gameState.appealsWon}</p>
-                      </div>
-                    </div>
-                    {/* Submit Score to Blockchain */}
-                    <div className="border-t border-white/10 pt-6 space-y-3">
-                      <p className="text-xs uppercase tracking-[0.3em] text-gray-400">
-                        Submit to GenLayer Blockchain
-                      </p>
-                      {!isConnected ? (
-                        <div className="relative">
-                          <button
-                            onClick={() => setShowWalletOptions(!showWalletOptions)}
-                            disabled={isConnecting}
+  scenario: ScenarioClaim;
+  playerChoice: 'trust' | 'doubt';
+  consensus: ConsensusResult;
+};
                             className="w-full rounded-2xl border-2 border-dashed border-white/30 px-6 py-4 text-sm font-semibold tracking-[0.1em] text-white/70 hover:border-genlayer-blue hover:text-genlayer-blue transition"
                           >
                             {isConnecting ? '🔄 Connecting...' : '🔗 Connect Wallet to Submit Score'}
