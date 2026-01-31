@@ -1,14 +1,14 @@
 'use client';
 
 import { createConfig, http } from 'wagmi';
-import { mainnet, sepolia, polygon, arbitrum, optimism, base } from 'wagmi/chains';
+import { mainnet, sepolia, polygon, arbitrum, optimism, base, type Chain } from 'wagmi/chains';
 import { walletConnect, injected, coinbaseWallet } from 'wagmi/connectors';
 
 // WalletConnect Project ID - Get yours at https://cloud.walletconnect.com
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id';
 
-// GenLayer custom chain (for display purposes)
-const genlayerStudioNet = {
+// GenLayer StudioNet - Custom chain for GenLayer blockchain
+export const genlayerStudioNet = {
   id: 61_999,
   name: 'GenLayer StudioNet',
   nativeCurrency: {
@@ -22,10 +22,11 @@ const genlayerStudioNet = {
   blockExplorers: {
     default: { name: 'GenLayer Explorer', url: 'https://studio.genlayer.com' },
   },
-} as const;
+  testnet: true,
+} as const satisfies Chain;
 
-// Supported chains
-export const chains = [mainnet, sepolia, polygon, arbitrum, optimism, base] as const;
+// Supported chains - GenLayer StudioNet is the primary chain for this game
+export const chains = [genlayerStudioNet, mainnet, sepolia, polygon, arbitrum, optimism, base] as const;
 
 // Wagmi config
 export const wagmiConfig = createConfig({
@@ -36,6 +37,7 @@ export const wagmiConfig = createConfig({
     coinbaseWallet({ appName: 'Accept or Doubt' }), // Coinbase Wallet
   ],
   transports: {
+    [genlayerStudioNet.id]: http('https://studio.genlayer.com/api'),
     [mainnet.id]: http(),
     [sepolia.id]: http(),
     [polygon.id]: http(),
