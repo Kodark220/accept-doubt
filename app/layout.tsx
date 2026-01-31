@@ -1,6 +1,5 @@
 import '../styles/globals.css';
-import dynamic from 'next/dynamic';
-const Web3Provider = dynamic(() => import('../components/Web3Provider'), { ssr: false });
+import ClientOnlyWeb3Provider from '../components/ClientOnlyWeb3Provider';
 
 export const metadata = {
   title: 'Trust or Doubt | GenLayer',
@@ -15,11 +14,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="main-gradient">
-        <Web3Provider>
+        <ClientOnlyWeb3Provider>
           <div className="min-h-screen">
             {children}
           </div>
-        </Web3Provider>
+        </ClientOnlyWeb3Provider>
       </body>
     </html>
   );
