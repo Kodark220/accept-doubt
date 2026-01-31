@@ -78,7 +78,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
 
   const handleSubmitScore = async () => {
     if (!isConnected) throw new Error('No wallet');
-    const result = await submitFinalScore(walletAddress, initialUsername, gameState.xp, gameState.correct, TOTAL_ROUNDS);
+    const result = await submitFinalScore(walletAddress, initialUsername, leaderboard.xp, gameState.correct, TOTAL_ROUNDS);
     if (result?.hash) setTxHash(result.hash);
     if (result?.confirmed) setScoreSubmitted(true);
   };
