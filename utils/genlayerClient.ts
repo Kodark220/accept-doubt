@@ -98,14 +98,13 @@ async function callContractWrite(methodName: string, args: any[] = []): Promise<
     
     console.log(`⏳ [GenLayer] Transaction submitted: ${txHash}`);
 
-    // Wait for transaction - try ACCEPTED first (faster), fall back handling
-    // AI consensus can take time, so we use generous timeouts
+    // Wait for transaction - AI consensus can take time, use generous timeouts
     let receipt;
     try {
       receipt = await client.waitForTransactionReceipt({
         hash: txHash,
-        status: 'ACCEPTED' as any,  // ACCEPTED is sufficient for our use case
-        retries: 60,                // More retries for AI consensus
+        status: 'FINALIZED' as any, // Wait for full finalization
+        retries: 90,                // 90 retries = up to 4.5 minutes
         interval: 3000,             // Check every 3 seconds
       });
     } catch (waitError: any) {
