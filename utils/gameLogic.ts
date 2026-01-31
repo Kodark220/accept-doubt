@@ -82,6 +82,7 @@ export function computeAccuracy(state: GameState): number {
 
 export function leaderboardSnapshot(state: GameState) {
   return {
+    xp: state.correct * 20,
     score: state.correct * 20,
     accuracy: computeAccuracy(state),
     correctTrusts: state.correctTrusts,
