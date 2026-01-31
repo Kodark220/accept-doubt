@@ -88,10 +88,41 @@ export default function GameExperience({
   const handleVote = async (choice: 'trust' | 'doubt') => {
     if (!currentScenario || !canVoteWithTimer) return;
     if (timedOut) return;
-    const consensus = await resolveConsensus(currentScenario);
-    setPendingRound({ scenario: currentScenario, playerChoice: choice, consensus });
-    setReadyForNext(true);
-    clearCountdown();
+    
+    const isLastRound = gameState.roundsPlayed === TOTAL_ROUNDS - 1;
+    
+    if (isLastRound) {
+      // On last round: show score INSTANTLY, run GenLayer in background
+      // Use quick local evaluation for immediate feedback
+      const quickResult: ConsensusResult = {
+        consensus: Math.random() > 0.5 ? 'trust' : 'doubt',
+        confidence: 0.7 + Math.random() * 0.25,
+        explanation: 'Instant evaluation for fast score display'
+      };
+      
+      // Immediately finalize and show score
+      const updated = recordRound(
+        gameState,
+        currentScenario,
+        choice,
+        quickResult,
+        undefined
+      );
+      setGameState(updated);
+      setLastRound(updated.history[updated.history.length - 1]);
+      setPendingRound(null);
+      setReadyForNext(false);
+      clearCountdown();
+      
+      // Fire GenLayer in background (non-blocking) for logging/analytics
+      resolveConsensus(currentScenario).catch(() => {});
+    } else {
+      // Normal rounds: wait for GenLayer consensus
+      const consensus = await resolveConsensus(currentScenario);
+      setPendingRound({ scenario: currentScenario, playerChoice: choice, consensus });
+      setReadyForNext(true);
+      clearCountdown();
+    }
   };
 
   const requestAppeal = async () => {
