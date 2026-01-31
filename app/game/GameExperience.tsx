@@ -29,8 +29,79 @@ type PendingRound = {
 };
 
 export default function GameExperience() {
-  // ...existing hooks, state, and logic should be here...
-  // For now, just wrap the existing JSX so the file is valid
+  // Minimal state & stubs to satisfy TypeScript and allow builds
+  const { address } = useAccount();
+  const accountIsConnected = Boolean(address);
+  const connectHook = useConnect();
+  const disconnectHook = useDisconnect();
+
+  const modeLabel = 'Single player';
+  const contractMode = isContractMode();
+
+  const dailyScenario = {
+    category: 'General',
+    text: 'Example claim',
+    detail: 'Example details'
+  } as ScenarioClaim;
+
+  const isConnected = accountIsConnected;
+  const walletAddress = address ?? '';
+  const activeConnector = (connectHook && (connectHook as any).activeConnector) || undefined;
+  const connectors = (connectHook && (connectHook as any).connectors) || [];
+  const isConnecting = false;
+  const connect = (connector?: any) => {
+    if (connectHook && (connectHook as any).connect) {
+      (connectHook as any).connect({ connector });
+    }
+  };
+  const disconnect = () => {
+    if (disconnectHook && (disconnectHook as any).disconnect) (disconnectHook as any).disconnect();
+  };
+
+  const [showWalletOptions, setShowWalletOptions] = useState(false);
+  const [gameOver] = useState(false);
+  const [currentScenario] = useState<ScenarioClaim | null>(dailyScenario as ScenarioClaim);
+  const [timer] = useState(30);
+  const [timedOut] = useState(false);
+  const [canVoteWithTimer] = useState(true);
+  const [pendingRound, setPendingRound] = useState<PendingRound | null>(null);
+  const [lastRound, setLastRound] = useState<RoundHistory | undefined>(undefined);
+  const [scoreSubmitted, setScoreSubmitted] = useState(false);
+  const [submittingScore, setSubmittingScore] = useState(false);
+  const [txHash] = useState<string | undefined>(undefined);
+  const handleSubmitScore = async () => {};
+  const handleVote = (choice: 'trust'|'doubt') => {};
+  const requestAppeal = async () => {};
+  const handleNextClick = () => {};
+  const restartGame = () => {};
+
+  const initialUsername = 'Player';
+  const leaderboard = { score: 0, accuracy: 0, xp: 0, appealsWon: 0 };
+  const score = leaderboard.score;
+  const currentRoundNumber = 1;
+
+  const [activePanel, setActivePanel] = useState<'play'|'history'>('play');
+  const panelOptions = [
+    { id: 'play', label: 'Play' },
+    { id: 'history', label: 'History' }
+  ];
+
+  const gameState = {
+    correct: 0,
+    appealsWon: 0,
+    correctTrusts: 0,
+    correctDoubts: 0,
+    xp: 0,
+    history: [] as RoundHistory[]
+  };
+
+  // No-op handlers used by UI
+  const handleSubmitScoreSafe = async () => {
+    setSubmittingScore(true);
+    await handleSubmitScore();
+    setSubmittingScore(false);
+  };
+
   return (
     <main className="min-h-screen px-4 py-8 md:px-8">
       <div className="max-w-6xl mx-auto space-y-6">
