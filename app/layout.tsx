@@ -1,5 +1,6 @@
 import '../styles/globals.css';
-import Web3Provider from '../components/Web3Provider';
+import dynamic from 'next/dynamic';
+const Web3Provider = dynamic(() => import('../components/Web3Provider'), { ssr: false });
 
 export const metadata = {
   title: 'Trust or Doubt | GenLayer',
