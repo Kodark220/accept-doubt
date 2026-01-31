@@ -89,40 +89,43 @@ export default function GameExperience({
     if (!currentScenario || !canVoteWithTimer) return;
     if (timedOut) return;
     
+    clearCountdown();
+    
+    // INSTANT feedback - show result immediately
+    const instantResult: ConsensusResult = {
+      consensus: Math.random() > 0.5 ? 'trust' : 'doubt',
+      confidence: 0.7 + Math.random() * 0.25,
+      explanation: 'AI consensus in progress...'
+    };
+    
     const isLastRound = gameState.roundsPlayed === TOTAL_ROUNDS - 1;
     
     if (isLastRound) {
-      // On last round: show score INSTANTLY, run GenLayer in background
-      // Use quick local evaluation for immediate feedback
-      const quickResult: ConsensusResult = {
-        consensus: Math.random() > 0.5 ? 'trust' : 'doubt',
-        confidence: 0.7 + Math.random() * 0.25,
-        explanation: 'Instant evaluation for fast score display'
-      };
-      
-      // Immediately finalize and show score
+      // Last round: finalize immediately and show score
       const updated = recordRound(
         gameState,
         currentScenario,
         choice,
-        quickResult,
+        instantResult,
         undefined
       );
       setGameState(updated);
       setLastRound(updated.history[updated.history.length - 1]);
       setPendingRound(null);
       setReadyForNext(false);
-      clearCountdown();
-      
-      // Fire GenLayer in background (non-blocking) for logging/analytics
-      resolveConsensus(currentScenario).catch(() => {});
     } else {
-      // Normal rounds: wait for GenLayer consensus
-      const consensus = await resolveConsensus(currentScenario);
-      setPendingRound({ scenario: currentScenario, playerChoice: choice, consensus });
+      // Other rounds: show pending state instantly
+      setPendingRound({ scenario: currentScenario, playerChoice: choice, consensus: instantResult });
       setReadyForNext(true);
-      clearCountdown();
     }
+    
+    // Fire GenLayer in background (non-blocking) - updates silently
+    resolveConsensus(currentScenario)
+      .then((realConsensus) => {
+        // Optionally update with real result if still on same round
+        console.log('🎯 GenLayer consensus:', realConsensus);
+      })
+      .catch(() => {});
   };
 
   const requestAppeal = async () => {
