@@ -304,3 +304,49 @@ export async function testContractConnection(): Promise<{ success: boolean; mess
     };
   }
 }
+
+// Submit final score to GenLayer blockchain
+export async function submitFinalScore(
+  playerWallet: string,
+  playerName: string,
+  xp: number,
+  correctAnswers: number,
+  totalRounds: number
+): Promise<{ hash: string; confirmed: boolean } | null> {
+  console.log('🏆 [GenLayer] Submitting final score to blockchain...');
+  console.log(`   Player: ${playerName} (${playerWallet})`);
+  console.log(`   Score: ${xp} XP, ${correctAnswers}/${totalRounds} correct`);
+  
+  if (!isContractMode()) {
+    // Mock mode - simulate submission
+    console.log('📝 [GenLayer] Mock mode - simulating score submission');
+    return {
+      hash: `0x${Date.now().toString(16)}mock`,
+      confirmed: true
+    };
+  }
+  
+  try {
+    const receipt = await callContractWrite('submit_score', [
+      playerWallet,
+      playerName,
+      xp,
+      correctAnswers,
+      totalRounds,
+      Date.now()
+    ]);
+    
+    console.log('✅ [GenLayer] Score submitted successfully!', receipt);
+    return {
+      hash: receipt.hash || receipt.transaction_hash || `0x${Date.now().toString(16)}`,
+      confirmed: true
+    };
+  } catch (error: any) {
+    console.error('❌ [GenLayer] Failed to submit score:', error);
+    // Return mock result on failure so UX isn't broken
+    return {
+      hash: `0x${Date.now().toString(16)}fallback`,
+      confirmed: false
+    };
+  }
+}

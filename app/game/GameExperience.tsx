@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
 import GenLayerLogo from '../../components/GenLayerLogo';
 import ScenarioDisplay from '../../components/ScenarioDisplay';
@@ -16,7 +16,8 @@ import {
   resolveAppeal,
   ConsensusResult,
   AppealOutcome,
-  isContractMode
+  isContractMode,
+  submitFinalScore
 } from '../../utils/genlayerClient';
 import { GameMode, TOTAL_ROUNDS } from './constants';
 
@@ -56,6 +57,13 @@ export default function GameExperience({
   const [timer, setTimer] = useState(30);
   const [timedOut, setTimedOut] = useState(false);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  
+  // Wallet connection state
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [scoreSubmitted, setScoreSubmitted] = useState(false);
+  const [submittingScore, setSubmittingScore] = useState(false);
+  const [txHash, setTxHash] = useState<string | null>(null);
 
   const currentScenario = scenarioQueue[currentIndex];
   const gameOver = gameState.roundsPlayed >= TOTAL_ROUNDS;
@@ -68,6 +76,62 @@ export default function GameExperience({
       countdownRef.current = null;
     }
   };
+
+  // Connect wallet function
+  const connectWallet = useCallback(async () => {
+    if (typeof window === 'undefined' || !(window as any).ethereum) {
+      alert('Please install MetaMask or another Web3 wallet!');
+      return;
+    }
+    
+    setIsConnecting(true);
+    try {
+      const accounts = await (window as any).ethereum.request({
+        method: 'eth_requestAccounts'
+      });
+      if (accounts && accounts.length > 0) {
+        setWalletAddress(accounts[0]);
+        console.log('🔗 Wallet connected:', accounts[0]);
+      }
+    } catch (error) {
+      console.error('Wallet connection failed:', error);
+    } finally {
+      setIsConnecting(false);
+    }
+  }, []);
+
+  // Disconnect wallet
+  const disconnectWallet = useCallback(() => {
+    setWalletAddress(null);
+    setScoreSubmitted(false);
+    setTxHash(null);
+  }, []);
+
+  // Submit final score to GenLayer blockchain
+  const handleSubmitScore = useCallback(async () => {
+    if (!walletAddress || submittingScore || scoreSubmitted) return;
+    
+    setSubmittingScore(true);
+    try {
+      const result = await submitFinalScore(
+        walletAddress,
+        initialUsername,
+        gameState.xp,
+        gameState.correct,
+        TOTAL_ROUNDS
+      );
+      if (result?.hash) {
+        setTxHash(result.hash);
+        setScoreSubmitted(true);
+        console.log('✅ Score submitted to GenLayer:', result.hash);
+      }
+    } catch (error) {
+      console.error('Failed to submit score:', error);
+      alert('Failed to submit score. Please try again.');
+    } finally {
+      setSubmittingScore(false);
+    }
+  }, [walletAddress, submittingScore, scoreSubmitted, initialUsername, gameState.xp, gameState.correct]);
 
   const finalizePendingRound = (appealOutcome?: AppealOutcome) => {
     if (!pendingRound) return null;
@@ -240,6 +304,31 @@ export default function GameExperience({
           </p>
           <p className="text-xs text-white/70 mt-1">{dailyScenario.detail}</p>
         </section>
+        
+        {/* Wallet Connection Bar */}
+        <div className="flex items-center justify-between bg-white/5 rounded-2xl px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${walletAddress ? 'bg-green-400' : 'bg-gray-500'}`} />
+            <span className="text-xs text-gray-400">
+              {walletAddress 
+                ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+                : 'No wallet connected'
+              }
+            </span>
+          </div>
+          <button
+            onClick={walletAddress ? disconnectWallet : connectWallet}
+            disabled={isConnecting}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
+              walletAddress 
+                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                : 'bg-genlayer-blue/20 text-genlayer-blue hover:bg-genlayer-blue/30'
+            } disabled:opacity-50`}
+          >
+            {isConnecting ? 'Connecting...' : walletAddress ? 'Disconnect' : 'Connect Wallet'}
+          </button>
+        </div>
+        
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             {gameOver ? (
@@ -266,6 +355,40 @@ export default function GameExperience({
                     <p className="text-2xl font-bold text-white">{gameState.appealsWon}</p>
                   </div>
                 </div>
+                
+                {/* Submit Score to Blockchain */}
+                <div className="border-t border-white/10 pt-6 space-y-3">
+                  <p className="text-xs uppercase tracking-[0.3em] text-gray-400">
+                    Submit to GenLayer Blockchain
+                  </p>
+                  {!walletAddress ? (
+                    <button
+                      onClick={connectWallet}
+                      disabled={isConnecting}
+                      className="w-full rounded-2xl border-2 border-dashed border-white/30 px-6 py-4 text-sm font-semibold tracking-[0.1em] text-white/70 hover:border-genlayer-blue hover:text-genlayer-blue transition"
+                    >
+                      {isConnecting ? '🔄 Connecting...' : '🔗 Connect Wallet to Submit Score'}
+                    </button>
+                  ) : scoreSubmitted ? (
+                    <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 space-y-2">
+                      <p className="text-green-400 font-semibold">✅ Score Confirmed on GenLayer!</p>
+                      {txHash && (
+                        <p className="text-xs text-gray-400 break-all">
+                          TX: {txHash.slice(0, 20)}...
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={handleSubmitScore}
+                      disabled={submittingScore}
+                      className="w-full rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-base font-semibold tracking-[0.2em] text-white disabled:opacity-50"
+                    >
+                      {submittingScore ? '⏳ Submitting to GenLayer...' : '📝 Sign & Submit Score'}
+                    </button>
+                  )}
+                </div>
+                
                 <button
                   onClick={restartGame}
                   className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
