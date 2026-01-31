@@ -420,7 +420,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                 <div className="grid gap-3">
                   <div className="flex justify-between text-sm text-gray-200">
                     <span>XP</span>
-                    <strong className="text-lg">{gameState.xp}</strong>
+                    <strong className="text-lg">{leaderboard.xp}</strong>
                   </div>
                   <div className="flex justify-between text-sm text-gray-200">
                     <span>Accuracy</span>
