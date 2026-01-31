@@ -383,4 +383,3 @@ type PendingRound = {
       </div>
     </main>
   );
-}
