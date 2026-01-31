@@ -28,21 +28,15 @@ type PendingRound = {
   consensus: ConsensusResult;
 };
 
-export default function GameExperience() {
+export default function GameExperience({ initialMode, initialUsername, initialQueue, dailyScenario }: { initialMode: GameMode; initialUsername: string; initialQueue: ScenarioClaim[]; dailyScenario: ScenarioClaim }) {
   // Minimal state & stubs to satisfy TypeScript and allow builds
   const { address } = useAccount();
   const accountIsConnected = Boolean(address);
   const connectHook = useConnect();
   const disconnectHook = useDisconnect();
 
-  const modeLabel = 'Single player';
+  const modeLabel = initialMode === 'single' ? 'Single player' : 'Multiplayer';
   const contractMode = isContractMode();
-
-  const dailyScenario = {
-    category: 'General',
-    text: 'Example claim',
-    detail: 'Example details'
-  } as ScenarioClaim;
 
   const isConnected = accountIsConnected;
   const walletAddress = address ?? '';
