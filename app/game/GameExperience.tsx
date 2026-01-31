@@ -69,7 +69,6 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
   const handleNextClick = () => {};
   const restartGame = () => {};
 
-  const initialUsername = 'Player';
   const leaderboard = { score: 0, accuracy: 0, xp: 0, appealsWon: 0 };
   const score = leaderboard.score;
   const currentRoundNumber = 1;
