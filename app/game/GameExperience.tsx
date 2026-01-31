@@ -220,9 +220,6 @@ type PendingRound = {
                   Play Again
                 </button>
               </section>
-                  Play Again
-                </button>
-              </section>
             ) : currentScenario ? (
               <>
                 <ScenarioDisplay
