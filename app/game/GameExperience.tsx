@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import GenLayerLogo from '../../components/GenLayerLogo';
 import ScenarioDisplay from '../../components/ScenarioDisplay';
 import Voting from '../../components/Voting';
@@ -58,12 +59,16 @@ export default function GameExperience({
   const [timedOut, setTimedOut] = useState(false);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   
-  // Wallet connection state
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
+  // Wallet connection via wagmi
+  const { address: walletAddress, isConnected, connector: activeConnector } = useAccount();
+  const { connect, connectors, isPending: isConnecting } = useConnect();
+  const { disconnect } = useDisconnect();
+  
+  // Score submission state
   const [scoreSubmitted, setScoreSubmitted] = useState(false);
   const [submittingScore, setSubmittingScore] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const [showWalletOptions, setShowWalletOptions] = useState(false);
 
   const currentScenario = scenarioQueue[currentIndex];
   const gameOver = gameState.roundsPlayed >= TOTAL_ROUNDS;
@@ -76,36 +81,6 @@ export default function GameExperience({
       countdownRef.current = null;
     }
   };
-
-  // Connect wallet function
-  const connectWallet = useCallback(async () => {
-    if (typeof window === 'undefined' || !(window as any).ethereum) {
-      alert('Please install MetaMask or another Web3 wallet!');
-      return;
-    }
-    
-    setIsConnecting(true);
-    try {
-      const accounts = await (window as any).ethereum.request({
-        method: 'eth_requestAccounts'
-      });
-      if (accounts && accounts.length > 0) {
-        setWalletAddress(accounts[0]);
-        console.log('🔗 Wallet connected:', accounts[0]);
-      }
-    } catch (error) {
-      console.error('Wallet connection failed:', error);
-    } finally {
-      setIsConnecting(false);
-    }
-  }, []);
-
-  // Disconnect wallet
-  const disconnectWallet = useCallback(() => {
-    setWalletAddress(null);
-    setScoreSubmitted(false);
-    setTxHash(null);
-  }, []);
 
   // Submit final score to GenLayer blockchain
   const handleSubmitScore = useCallback(async () => {
@@ -305,28 +280,67 @@ export default function GameExperience({
           <p className="text-xs text-white/70 mt-1">{dailyScenario.detail}</p>
         </section>
         
-        {/* Wallet Connection Bar */}
-        <div className="flex items-center justify-between bg-white/5 rounded-2xl px-4 py-3">
+        {/* Wallet Connection Bar - Multi-wallet support */}
+        <div className="flex items-center justify-between bg-white/5 rounded-2xl px-4 py-3 relative">
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${walletAddress ? 'bg-green-400' : 'bg-gray-500'}`} />
+            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-gray-500'}`} />
             <span className="text-xs text-gray-400">
-              {walletAddress 
+              {isConnected && walletAddress
                 ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
                 : 'No wallet connected'
               }
             </span>
+            {activeConnector && (
+              <span className="text-[10px] text-gray-500 uppercase px-2 py-0.5 bg-white/5 rounded">
+                {activeConnector.name}
+              </span>
+            )}
           </div>
-          <button
-            onClick={walletAddress ? disconnectWallet : connectWallet}
-            disabled={isConnecting}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
-              walletAddress 
-                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                : 'bg-genlayer-blue/20 text-genlayer-blue hover:bg-genlayer-blue/30'
-            } disabled:opacity-50`}
-          >
-            {isConnecting ? 'Connecting...' : walletAddress ? 'Disconnect' : 'Connect Wallet'}
-          </button>
+          
+          {isConnected ? (
+            <button
+              onClick={() => disconnect()}
+              className="px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"
+            >
+              Disconnect
+            </button>
+          ) : (
+            <div className="relative">
+              <button
+                onClick={() => setShowWalletOptions(!showWalletOptions)}
+                disabled={isConnecting}
+                className="px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider bg-genlayer-blue/20 text-genlayer-blue hover:bg-genlayer-blue/30 transition disabled:opacity-50"
+              >
+                {isConnecting ? '🔄 Connecting...' : '🔗 Connect Wallet'}
+              </button>
+              
+              {showWalletOptions && (
+                <div className="absolute top-full right-0 mt-2 bg-genlayer-dark border border-white/20 rounded-2xl p-3 space-y-2 z-50 min-w-[220px] shadow-xl">
+                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Select Wallet</p>
+                  {connectors.map((connector) => (
+                    <button
+                      key={connector.uid}
+                      onClick={() => {
+                        connect({ connector });
+                        setShowWalletOptions(false);
+                      }}
+                      disabled={isConnecting}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition text-left disabled:opacity-50"
+                    >
+                      <span className="text-lg">
+                        {connector.name === 'MetaMask' && '🦊'}
+                        {connector.name === 'WalletConnect' && '🔗'}
+                        {connector.name === 'Coinbase Wallet' && '🔵'}
+                        {connector.name === 'Injected' && '💉'}
+                        {!['MetaMask', 'WalletConnect', 'Coinbase Wallet', 'Injected'].includes(connector.name) && '👛'}
+                      </span>
+                      <span className="text-sm text-white">{connector.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
         
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -361,14 +375,42 @@ export default function GameExperience({
                   <p className="text-xs uppercase tracking-[0.3em] text-gray-400">
                     Submit to GenLayer Blockchain
                   </p>
-                  {!walletAddress ? (
-                    <button
-                      onClick={connectWallet}
-                      disabled={isConnecting}
-                      className="w-full rounded-2xl border-2 border-dashed border-white/30 px-6 py-4 text-sm font-semibold tracking-[0.1em] text-white/70 hover:border-genlayer-blue hover:text-genlayer-blue transition"
-                    >
-                      {isConnecting ? '🔄 Connecting...' : '🔗 Connect Wallet to Submit Score'}
-                    </button>
+                  {!isConnected ? (
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowWalletOptions(!showWalletOptions)}
+                        disabled={isConnecting}
+                        className="w-full rounded-2xl border-2 border-dashed border-white/30 px-6 py-4 text-sm font-semibold tracking-[0.1em] text-white/70 hover:border-genlayer-blue hover:text-genlayer-blue transition"
+                      >
+                        {isConnecting ? '🔄 Connecting...' : '🔗 Connect Wallet to Submit Score'}
+                      </button>
+                      
+                      {showWalletOptions && (
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-genlayer-dark border border-white/20 rounded-2xl p-3 space-y-2 z-50 min-w-[220px] shadow-xl">
+                          <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Select Wallet</p>
+                          {connectors.map((connector) => (
+                            <button
+                              key={connector.uid}
+                              onClick={() => {
+                                connect({ connector });
+                                setShowWalletOptions(false);
+                              }}
+                              disabled={isConnecting}
+                              className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition text-left disabled:opacity-50"
+                            >
+                              <span className="text-lg">
+                                {connector.name === 'MetaMask' && '🦊'}
+                                {connector.name === 'WalletConnect' && '🔗'}
+                                {connector.name === 'Coinbase Wallet' && '🔵'}
+                                {connector.name === 'Injected' && '💉'}
+                                {!['MetaMask', 'WalletConnect', 'Coinbase Wallet', 'Injected'].includes(connector.name) && '👛'}
+                              </span>
+                              <span className="text-sm text-white">{connector.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   ) : scoreSubmitted ? (
                     <div className="bg-green-500/10 border border-green-500/30 rounded-2xl p-4 space-y-2">
                       <p className="text-green-400 font-semibold">✅ Score Confirmed on GenLayer!</p>

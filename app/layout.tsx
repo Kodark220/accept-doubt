@@ -1,4 +1,5 @@
 import '../styles/globals.css';
+import Web3Provider from '../components/Web3Provider';
 
 export const metadata = {
   title: 'Trust or Doubt | GenLayer',
@@ -13,9 +14,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="main-gradient">
-        <div className="min-h-screen">
-          {children}
-        </div>
+        <Web3Provider>
+          <div className="min-h-screen">
+            {children}
+          </div>
+        </Web3Provider>
       </body>
     </html>
   );

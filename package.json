@@ -9,10 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.20",
+    "@web3modal/wagmi": "^5.1.11",
     "genlayer-js": "^0.18.9",
     "next": "^16.1.6",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "viem": "^2.45.1",
+    "wagmi": "^3.4.1"
   },
   "devDependencies": {
     "@types/node": "20.14.1",
