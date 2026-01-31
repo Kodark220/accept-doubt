@@ -85,8 +85,6 @@ async function callContractWrite(methodName: string, args: any[] = []): Promise<
   }
   
   const client = getGenLayerClient();
-  console.log(`🔧 [GenLayer] Client created:`, client);
-  console.log(`🔧 [GenLayer] Client writeContract method:`, typeof client.writeContract);
   
   try {
     const writeParams = {
@@ -95,22 +93,36 @@ async function callContractWrite(methodName: string, args: any[] = []): Promise<
       args,
       value: BigInt(0),
     };
-    console.log(`🔧 [GenLayer] Write params:`, writeParams);
     
     const txHash = await client.writeContract(writeParams);
     
     console.log(`⏳ [GenLayer] Transaction submitted: ${txHash}`);
 
-    // Wait for transaction to be finalized (status 5 = FINALIZED)
-    const receipt = await client.waitForTransactionReceipt({
-      hash: txHash,
-      status: 'FINALIZED' as any,
-      retries: 30,
-      interval: 5000,
-    });
+    // Wait for transaction - try ACCEPTED first (faster), fall back handling
+    // AI consensus can take time, so we use generous timeouts
+    let receipt;
+    try {
+      receipt = await client.waitForTransactionReceipt({
+        hash: txHash,
+        status: 'ACCEPTED' as any,  // ACCEPTED is sufficient for our use case
+        retries: 60,                // More retries for AI consensus
+        interval: 3000,             // Check every 3 seconds
+      });
+    } catch (waitError: any) {
+      // If not finalized yet, try to get current status
+      console.log(`⚠️ [GenLayer] Transaction not yet finalized, checking status...`);
+      try {
+        receipt = await client.getTransactionByHash(txHash);
+        if (receipt) {
+          console.log(`📊 [GenLayer] Current transaction status:`, receipt);
+        }
+      } catch (e) {
+        // Ignore and throw original error
+      }
+      throw waitError;
+    }
 
     console.log(`✅ [GenLayer] Transaction confirmed:`, receipt);
-    console.log(`📦 [GenLayer] Receipt data:`, JSON.stringify(receipt?.data, null, 2));
     return receipt;
   } catch (error) {
     console.error(`❌ [GenLayer] writeContract error:`, error);
@@ -191,8 +203,8 @@ async function fetchContractConsensus(claim: ScenarioClaim): Promise<ConsensusRe
     console.warn('Contract returned unexpected result, falling back to mock:', result);
     return runMockConsensus(claim);
   } catch (error) {
-    console.error('GenLayer contract consensus failed:', error);
-    console.warn('Falling back to mock consensus');
+    // Don't spam console with full errors - just note the fallback
+    console.log('⚠️ [GenLayer] Contract call failed, using mock consensus instead');
     return runMockConsensus(claim);
   }
 }

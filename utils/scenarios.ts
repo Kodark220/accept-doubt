@@ -6,90 +6,330 @@ export type ScenarioClaim = {
   detail: string;
 };
 
-const subjects = [
-  'GenLayer protocol guardians',
-  'Intelligent contracts',
-  'Hybrid oracle nodes',
-  'Optimistic democracy lanes',
-  'Autonomous governance bots',
-  'Proof readers',
-  'Decentralized juries',
-  'AI-assisted reviewers',
-  'Zero-knowledge aggregators',
-  'Cross-chain inspectors',
-  'GenLayer doc analysts',
-  'Consensus whisperers'
+const curatedClaims: Omit<ScenarioClaim, 'id'>[] = [
+  // ===== GENLAYER (30) =====
+  { text: "GenLayer uses AI validators to reach consensus on intelligent contracts.", category: "GenLayer", verdict: "trust", detail: "GenLayer's core innovation is using multiple AI models as validators to reach consensus." },
+  { text: "GenLayer's Optimistic Democracy allows any validator to challenge transaction results.", category: "GenLayer", verdict: "trust", detail: "Optimistic Democracy is GenLayer's consensus mechanism where validators can appeal decisions." },
+  { text: "GenLayer validators must all use the same AI model (GPT-4) for consensus.", category: "GenLayer", verdict: "doubt", detail: "GenLayer supports multiple AI models including Claude, GPT, Gemini, Llama, and DeepSeek." },
+  { text: "GenLayer's gl.nondet.exec_prompt() function enables AI-powered contract logic.", category: "GenLayer", verdict: "trust", detail: "This function allows intelligent contracts to execute AI prompts as part of their logic." },
+  { text: "GenLayer contracts cannot store persistent state between transactions.", category: "GenLayer", verdict: "doubt", detail: "GenLayer contracts use TreeMap and other storage primitives for persistent state." },
+  { text: "GenLayer's equivalence principle ensures validators agree on AI outputs.", category: "GenLayer", verdict: "trust", detail: "The equivalence principle compares outputs from different validators to reach consensus." },
+  { text: "GenLayer intelligent contracts cannot make HTTP requests to external APIs.", category: "GenLayer", verdict: "doubt", detail: "GenLayer contracts can fetch web data using gl.nondet.get_webpage()." },
+  { text: "The @gl.public.write decorator marks methods that modify contract state.", category: "GenLayer", verdict: "trust", detail: "This decorator indicates state-changing methods in GenLayer contracts." },
+  { text: "GenLayer contracts execute deterministically like traditional smart contracts.", category: "GenLayer", verdict: "doubt", detail: "GenLayer's key innovation is supporting non-deterministic AI operations with consensus." },
+  { text: "GenLayer transactions can be appealed if a validator disagrees with the result.", category: "GenLayer", verdict: "trust", detail: "The appeal mechanism is central to Optimistic Democracy consensus." },
+  { text: "GenLayer contracts are backwards compatible with Ethereum smart contracts.", category: "GenLayer", verdict: "doubt", detail: "GenLayer uses Python, not Solidity, with a different execution model." },
+  { text: "GenLayer enables AI-powered oracles without external dependencies.", category: "GenLayer", verdict: "trust", detail: "AI validators can fetch and verify real-world data natively." },
+  { text: "GenLayer's testnet is called StudioNet.", category: "GenLayer", verdict: "trust", detail: "StudioNet provides a testing environment for developers." },
+  { text: "GenLayer contracts must pay gas fees in ETH.", category: "GenLayer", verdict: "doubt", detail: "GenLayer has its own token economy, not dependent on ETH." },
+  { text: "GenLayer validators can use different AI models and still reach consensus.", category: "GenLayer", verdict: "trust", detail: "Validator diversity with different models is a key feature." },
+  { text: "Intelligent contracts on GenLayer can only use Python as their programming language.", category: "GenLayer", verdict: "trust", detail: "GenLayer intelligent contracts are written in Python with the genlayer SDK." },
+  { text: "GenLayer's consensus mechanism is identical to Ethereum's Proof of Stake.", category: "GenLayer", verdict: "doubt", detail: "GenLayer uses Optimistic Democracy, a unique AI-focused consensus mechanism." },
+  { text: "GenLayer's @gl.public.view decorator marks read-only contract methods.", category: "GenLayer", verdict: "trust", detail: "View methods don't modify state and don't require consensus." },
+  { text: "GenLayer was designed specifically for AI-native blockchain applications.", category: "GenLayer", verdict: "trust", detail: "GenLayer's architecture is built around AI validator consensus." },
+  { text: "The genlayer-js SDK allows JavaScript applications to interact with GenLayer.", category: "GenLayer", verdict: "trust", detail: "This official SDK provides client-side integration for GenLayer contracts." },
+  { text: "GenLayer contracts are limited to 100 lines of code maximum.", category: "GenLayer", verdict: "doubt", detail: "There is no such artificial limit on GenLayer contract size." },
+  { text: "GenLayer requires validators to stake tokens to participate in consensus.", category: "GenLayer", verdict: "trust", detail: "Validators must stake tokens as economic security for honest behavior." },
+  { text: "GenLayer's AI prompts are visible to all validators during execution.", category: "GenLayer", verdict: "trust", detail: "Transparency in prompts enables verifiable AI consensus." },
+  { text: "GenLayer contracts can only be deployed by verified developers.", category: "GenLayer", verdict: "doubt", detail: "GenLayer is permissionless for contract deployment." },
+  { text: "gl.eq_principle.prompt_comparative() helps validators agree on AI responses.", category: "GenLayer", verdict: "trust", detail: "This function compares AI outputs across validators to establish consensus." },
+  { text: "GenLayer's consensus is finalized instantly without any waiting period.", category: "GenLayer", verdict: "doubt", detail: "Optimistic consensus includes challenge periods for appeals." },
+  { text: "GenLayer enables trustless AI computations with verifiable results.", category: "GenLayer", verdict: "trust", detail: "Multi-validator consensus provides trustless AI execution." },
+  { text: "GenLayer's Python contracts have access to the full Python standard library.", category: "GenLayer", verdict: "doubt", detail: "Contracts run in a sandboxed environment with limited imports." },
+  { text: "GenLayer supports conditional logic based on AI evaluation results.", category: "GenLayer", verdict: "trust", detail: "Contract logic can branch based on AI validator consensus." },
+  { text: "GenLayer's TreeMap is used for persistent key-value storage in contracts.", category: "GenLayer", verdict: "trust", detail: "TreeMap provides ordered, persistent storage for contract data." },
+
+  // ===== BITCOIN (40) =====
+  { text: "Bitcoin has a maximum supply cap of 21 million coins.", category: "Bitcoin", verdict: "trust", detail: "Bitcoin's protocol enforces a hard cap of 21 million BTC." },
+  { text: "Satoshi Nakamoto's identity has been officially confirmed and verified.", category: "Bitcoin", verdict: "doubt", detail: "The true identity of Bitcoin's creator remains unknown." },
+  { text: "Bitcoin transactions are completely anonymous and untraceable.", category: "Bitcoin", verdict: "doubt", detail: "Bitcoin is pseudonymous, not anonymous. All transactions are publicly recorded." },
+  { text: "Bitcoin mining difficulty adjusts approximately every two weeks.", category: "Bitcoin", verdict: "trust", detail: "Difficulty adjusts every 2016 blocks to maintain 10-minute block times." },
+  { text: "The Bitcoin whitepaper was published in 2008.", category: "Bitcoin", verdict: "trust", detail: "Satoshi Nakamoto published it on October 31, 2008." },
+  { text: "Bitcoin uses Proof of Stake for consensus.", category: "Bitcoin", verdict: "doubt", detail: "Bitcoin uses Proof of Work (PoW), not Proof of Stake." },
+  { text: "The first Bitcoin transaction was for two pizzas worth 10,000 BTC.", category: "Bitcoin", verdict: "trust", detail: "On May 22, 2010, Laszlo Hanyecz paid 10,000 BTC for two pizzas." },
+  { text: "Bitcoin block rewards halve approximately every 4 years.", category: "Bitcoin", verdict: "trust", detail: "The halving occurs every 210,000 blocks, roughly every 4 years." },
+  { text: "Bitcoin can process thousands of transactions per second on-chain.", category: "Bitcoin", verdict: "doubt", detail: "Bitcoin processes about 7 TPS on-chain; Layer 2 adds capacity." },
+  { text: "The Bitcoin genesis block contained a newspaper headline about bank bailouts.", category: "Bitcoin", verdict: "trust", detail: "Block 0 included: 'The Times 03/Jan/2009 Chancellor on brink of second bailout for banks'." },
+  { text: "Bitcoin uses SHA-256 as its primary hashing algorithm.", category: "Bitcoin", verdict: "trust", detail: "SHA-256 is used for mining and transaction verification." },
+  { text: "Bitcoin transactions can be reversed by miners after confirmation.", category: "Bitcoin", verdict: "doubt", detail: "Confirmed transactions are practically irreversible." },
+  { text: "The smallest unit of Bitcoin is called a satoshi.", category: "Bitcoin", verdict: "trust", detail: "One satoshi equals 0.00000001 BTC." },
+  { text: "Bitcoin blocks are created approximately every 10 minutes.", category: "Bitcoin", verdict: "trust", detail: "The difficulty adjustment targets a 10-minute average block time." },
+  { text: "SegWit (Segregated Witness) was activated on Bitcoin in 2017.", category: "Bitcoin", verdict: "trust", detail: "SegWit activated in August 2017." },
+  { text: "Bitcoin mining can be profitable with regular laptop computers.", category: "Bitcoin", verdict: "doubt", detail: "Modern Bitcoin mining requires specialized ASIC hardware." },
+  { text: "The Bitcoin network has never experienced a major security breach.", category: "Bitcoin", verdict: "trust", detail: "The Bitcoin protocol itself has never been hacked." },
+  { text: "Bitcoin uses a UTXO (Unspent Transaction Output) model.", category: "Bitcoin", verdict: "trust", detail: "UTXOs track ownership and prevent double-spending." },
+  { text: "Taproot was a major Bitcoin upgrade activated in 2021.", category: "Bitcoin", verdict: "trust", detail: "Taproot improved privacy and smart contract capabilities." },
+  { text: "Bitcoin transactions require personal identification to complete.", category: "Bitcoin", verdict: "doubt", detail: "Bitcoin is permissionless and doesn't require ID." },
+  { text: "The Bitcoin network consumes more electricity than some countries.", category: "Bitcoin", verdict: "trust", detail: "Bitcoin mining's energy consumption is comparable to some nations." },
+  { text: "Bitcoin's scripting language is Turing-complete.", category: "Bitcoin", verdict: "doubt", detail: "Bitcoin Script is intentionally limited and not Turing-complete." },
+  { text: "The last Bitcoin will be mined around the year 2140.", category: "Bitcoin", verdict: "trust", detail: "Due to halving schedule, the final satoshi will be mined around 2140." },
+  { text: "Bitcoin Lightning Network enables instant, low-fee transactions.", category: "Bitcoin", verdict: "trust", detail: "Lightning is Bitcoin's main Layer 2 scaling solution." },
+  { text: "Bitcoin's price is controlled by a central authority.", category: "Bitcoin", verdict: "doubt", detail: "Bitcoin's price is determined by free market supply and demand." },
+  { text: "Bitcoin wallets actually store Bitcoin on your device.", category: "Bitcoin", verdict: "doubt", detail: "Wallets store private keys; Bitcoin exists only on the blockchain." },
+  { text: "Bitcoin Ordinals enabled NFT-like inscriptions on Bitcoin.", category: "Bitcoin", verdict: "trust", detail: "Ordinals protocol launched in 2023 for Bitcoin-native digital artifacts." },
+  { text: "The Bitcoin Foundation controls the Bitcoin network.", category: "Bitcoin", verdict: "doubt", detail: "No organization controls Bitcoin; it's decentralized." },
+  { text: "Bitcoin's block size is limited to 1 MB (plus SegWit data).", category: "Bitcoin", verdict: "trust", detail: "The base block limit is 1 MB; SegWit increases capacity to ~4 MB." },
+  { text: "Bitcoin's whitepaper is only 9 pages long.", category: "Bitcoin", verdict: "trust", detail: "The original Bitcoin whitepaper is remarkably concise at 9 pages." },
+  { text: "Satoshi Nakamoto mined approximately 1 million Bitcoin.", category: "Bitcoin", verdict: "trust", detail: "Analysis suggests Satoshi mined about 1 million BTC in early days." },
+  { text: "Cold storage refers to keeping Bitcoin offline for security.", category: "Bitcoin", verdict: "trust", detail: "Cold wallets are not connected to the internet." },
+  { text: "Bitcoin Cash (BCH) forked from Bitcoin in 2017.", category: "Bitcoin", verdict: "trust", detail: "BCH split over disagreements about block size scaling." },
+  { text: "Bitcoin can be recovered if you lose your private key.", category: "Bitcoin", verdict: "doubt", detail: "Lost private keys mean lost Bitcoin; there's no recovery mechanism." },
+  { text: "BIP-39 defines the mnemonic seed phrase standard.", category: "Bitcoin", verdict: "trust", detail: "12 or 24 word phrases derive wallet keys using BIP-39." },
+  { text: "Bitcoin's hash rate represents the total computational power securing the network.", category: "Bitcoin", verdict: "trust", detail: "Higher hash rate means more security against attacks." },
+  { text: "Replace-By-Fee (RBF) allows increasing fees on unconfirmed transactions.", category: "Bitcoin", verdict: "trust", detail: "RBF lets users bump fees to speed up confirmation." },
+  { text: "Bitcoin has a built-in governance mechanism for protocol changes.", category: "Bitcoin", verdict: "doubt", detail: "Bitcoin governance is informal, based on rough consensus." },
+  { text: "All Bitcoin transactions are stored permanently on the blockchain.", category: "Bitcoin", verdict: "trust", detail: "The blockchain is an immutable ledger of all transactions." },
+  { text: "Multi-signature (multisig) wallets are supported on Bitcoin.", category: "Bitcoin", verdict: "trust", detail: "Bitcoin natively supports M-of-N multisig transactions." },
+
+  // ===== ETHEREUM (40) =====
+  { text: "Ethereum switched from Proof of Work to Proof of Stake in 'The Merge'.", category: "Ethereum", verdict: "trust", detail: "The Merge occurred on September 15, 2022." },
+  { text: "Vitalik Buterin is the sole creator of Ethereum.", category: "Ethereum", verdict: "doubt", detail: "Ethereum had multiple co-founders including Gavin Wood, Charles Hoskinson, and others." },
+  { text: "Smart contracts were first introduced by Ethereum.", category: "Ethereum", verdict: "doubt", detail: "The concept was proposed by Nick Szabo in the 1990s." },
+  { text: "Ethereum gas fees are paid in ETH.", category: "Ethereum", verdict: "trust", detail: "All transaction fees on Ethereum are paid in ETH." },
+  { text: "EIP-1559 introduced a fee-burning mechanism to Ethereum.", category: "Ethereum", verdict: "trust", detail: "EIP-1559 burns a portion of transaction fees." },
+  { text: "Ethereum can process over 100,000 transactions per second on mainnet.", category: "Ethereum", verdict: "doubt", detail: "Ethereum mainnet processes roughly 15-30 TPS." },
+  { text: "The DAO hack in 2016 led to Ethereum's first hard fork.", category: "Ethereum", verdict: "trust", detail: "The hack led to the Ethereum/Ethereum Classic split." },
+  { text: "Solidity is the primary programming language for Ethereum smart contracts.", category: "Ethereum", verdict: "trust", detail: "Solidity is the most widely used language." },
+  { text: "Ethereum's native token is called Ether (ETH).", category: "Ethereum", verdict: "trust", detail: "ETH is used for gas fees and as the network's native currency." },
+  { text: "Ethereum has an unlimited supply cap.", category: "Ethereum", verdict: "trust", detail: "Unlike Bitcoin, Ethereum has no hard cap on total ETH supply." },
+  { text: "ERC-20 is the standard for fungible tokens on Ethereum.", category: "Ethereum", verdict: "trust", detail: "Most tokens on Ethereum follow the ERC-20 interface." },
+  { text: "Ethereum blocks are produced approximately every 12 seconds.", category: "Ethereum", verdict: "trust", detail: "Post-Merge, Ethereum has fixed 12-second slot times." },
+  { text: "The Ethereum Virtual Machine (EVM) executes smart contract bytecode.", category: "Ethereum", verdict: "trust", detail: "EVM is the runtime environment for Ethereum smart contracts." },
+  { text: "Staking ETH requires a minimum of 32 ETH to run a validator.", category: "Ethereum", verdict: "trust", detail: "Solo validators need 32 ETH." },
+  { text: "ENS (Ethereum Name Service) provides human-readable addresses.", category: "Ethereum", verdict: "trust", detail: "ENS maps names like vitalik.eth to Ethereum addresses." },
+  { text: "Ethereum smart contracts can be upgraded after deployment.", category: "Ethereum", verdict: "doubt", detail: "Contracts are immutable by default; upgradability requires proxy patterns." },
+  { text: "The Shanghai upgrade enabled staked ETH withdrawals.", category: "Ethereum", verdict: "trust", detail: "Shanghai/Capella in April 2023 allowed staking withdrawals." },
+  { text: "Ethereum's gas price is measured in Gwei.", category: "Ethereum", verdict: "trust", detail: "1 Gwei = 0.000000001 ETH." },
+  { text: "Ethereum validators can be slashed for malicious behavior.", category: "Ethereum", verdict: "trust", detail: "Slashing penalizes validators who act dishonestly." },
+  { text: "EIP-4844 (Proto-Danksharding) reduced L2 transaction costs.", category: "Ethereum", verdict: "trust", detail: "Blob transactions dramatically lowered rollup fees." },
+  { text: "All ERC-20 tokens have exactly 18 decimal places.", category: "Ethereum", verdict: "doubt", detail: "Token decimals vary; USDC uses 6." },
+  { text: "Re-entrancy is a common smart contract vulnerability.", category: "Ethereum", verdict: "trust", detail: "The DAO hack exploited re-entrancy." },
+  { text: "Ethereum nodes must be run on specialized hardware.", category: "Ethereum", verdict: "doubt", detail: "Ethereum nodes can run on regular consumer hardware." },
+  { text: "ERC-721 is the standard for NFTs on Ethereum.", category: "Ethereum", verdict: "trust", detail: "ERC-721 defines the interface for non-fungible tokens." },
+  { text: "Vyper is an alternative smart contract language for Ethereum.", category: "Ethereum", verdict: "trust", detail: "Vyper prioritizes security and simplicity." },
+  { text: "Account abstraction (ERC-4337) enables smart contract wallets.", category: "Ethereum", verdict: "trust", detail: "Account abstraction allows programmable wallet logic." },
+  { text: "Ethereum's total supply decreases when more ETH is burned than issued.", category: "Ethereum", verdict: "trust", detail: "Post-EIP-1559, high activity can make ETH deflationary." },
+  { text: "MEV stands for Maximal Extractable Value.", category: "Ethereum", verdict: "trust", detail: "MEV refers to value extracted through transaction ordering." },
+  { text: "Ethereum mainnet launched on July 30, 2015.", category: "Ethereum", verdict: "trust", detail: "The Frontier release marked Ethereum's mainnet launch." },
+  { text: "The Beacon Chain was launched in December 2020.", category: "Ethereum", verdict: "trust", detail: "The Beacon Chain introduced Proof of Stake before The Merge." },
+  { text: "Ethereum Foundation holds the majority of ETH supply.", category: "Ethereum", verdict: "doubt", detail: "The EF holds a significant but not majority stake." },
+  { text: "Flashbots helps reduce MEV extraction harm on Ethereum.", category: "Ethereum", verdict: "trust", detail: "Flashbots provides tools to democratize and reduce MEV impact." },
+  { text: "EIP stands for Ethereum Improvement Proposal.", category: "Ethereum", verdict: "trust", detail: "EIPs formalize standards and protocol changes." },
+  { text: "Self-destruct (selfdestruct) permanently removes a contract from Ethereum.", category: "Ethereum", verdict: "doubt", detail: "After the Cancun upgrade, selfdestruct no longer deletes code." },
+  { text: "Ethereum's finality takes about 15 minutes (2 epochs).", category: "Ethereum", verdict: "trust", detail: "Blocks are finalized after being justified across two epochs." },
+  { text: "ERC-1155 allows multiple token types in a single contract.", category: "Ethereum", verdict: "trust", detail: "ERC-1155 supports both fungible and non-fungible tokens." },
+  { text: "Ethereum transactions include a nonce to prevent replay attacks.", category: "Ethereum", verdict: "trust", detail: "Nonces ensure transactions are processed in order and only once." },
+  { text: "Events in Solidity are stored in transaction logs, not contract state.", category: "Ethereum", verdict: "trust", detail: "Logs are cheaper storage and accessible off-chain." },
+  { text: "All Ethereum validators must run the same client software.", category: "Ethereum", verdict: "doubt", detail: "Client diversity is encouraged; multiple implementations exist." },
+  { text: "The London upgrade in 2021 introduced EIP-1559.", category: "Ethereum", verdict: "trust", detail: "London brought the base fee burning mechanism." },
+
+  // ===== DEFI (50) =====
+  { text: "Uniswap was the first automated market maker (AMM) on Ethereum.", category: "DeFi", verdict: "doubt", detail: "Bancor launched before Uniswap." },
+  { text: "Total Value Locked (TVL) measures assets deposited in DeFi protocols.", category: "DeFi", verdict: "trust", detail: "TVL is a key metric for DeFi." },
+  { text: "Flash loans require collateral to be posted before borrowing.", category: "DeFi", verdict: "doubt", detail: "Flash loans are uncollateralized; they must be repaid in the same transaction." },
+  { text: "Impermanent loss affects liquidity providers when token prices diverge.", category: "DeFi", verdict: "trust", detail: "LPs can lose value compared to holding when prices move." },
+  { text: "Yield farming always guarantees positive returns.", category: "DeFi", verdict: "doubt", detail: "Yield farming carries risks including bugs and rug pulls." },
+  { text: "MakerDAO's DAI stablecoin is backed by crypto collateral.", category: "DeFi", verdict: "trust", detail: "DAI is overcollateralized by ETH and other assets." },
+  { text: "Aave pioneered the concept of flash loans in DeFi.", category: "DeFi", verdict: "trust", detail: "Aave introduced flash loans." },
+  { text: "Decentralized exchanges always have better prices than centralized ones.", category: "DeFi", verdict: "doubt", detail: "Price efficiency depends on liquidity." },
+  { text: "Compound Protocol uses cTokens to represent deposited assets.", category: "DeFi", verdict: "trust", detail: "cTokens accrue interest and represent your share." },
+  { text: "AMMs use constant product formulas like x*y=k for pricing.", category: "DeFi", verdict: "trust", detail: "Uniswap's constant product formula maintains liquidity." },
+  { text: "DeFi protocols are immune to hacks and exploits.", category: "DeFi", verdict: "doubt", detail: "Billions have been lost to DeFi exploits." },
+  { text: "Curve Finance specializes in stablecoin and pegged asset trading.", category: "DeFi", verdict: "trust", detail: "Curve's pools are optimized for similar-value assets." },
+  { text: "Lending protocols typically require overcollateralization.", category: "DeFi", verdict: "trust", detail: "Borrowers must deposit more collateral than they borrow." },
+  { text: "DEX aggregators like 1inch find the best prices across exchanges.", category: "DeFi", verdict: "trust", detail: "Aggregators split orders for optimal execution." },
+  { text: "All DeFi protocols are fully decentralized with no admin controls.", category: "DeFi", verdict: "doubt", detail: "Many DeFi protocols have admin keys or multisigs." },
+  { text: "Oracle manipulation is a common DeFi attack vector.", category: "DeFi", verdict: "trust", detail: "Price oracle exploits have caused numerous hacks." },
+  { text: "Synthetic assets track real-world prices without holding the underlying.", category: "DeFi", verdict: "trust", detail: "Protocols like Synthetix create synthetic exposure." },
+  { text: "Liquidations occur when collateral value falls below required thresholds.", category: "DeFi", verdict: "trust", detail: "Liquidators repay debt and receive collateral at a discount." },
+  { text: "DeFi insurance protocols protect against smart contract failures.", category: "DeFi", verdict: "trust", detail: "Protocols like Nexus Mutual offer coverage." },
+  { text: "Yield aggregators automatically compound farming rewards.", category: "DeFi", verdict: "trust", detail: "Yearn and similar protocols optimize yield." },
+  { text: "Concentrated liquidity allows LPs to specify price ranges.", category: "DeFi", verdict: "trust", detail: "Uniswap v3 introduced concentrated liquidity." },
+  { text: "DeFi lending rates are always higher than traditional bank rates.", category: "DeFi", verdict: "doubt", detail: "DeFi rates fluctuate with supply and demand." },
+  { text: "Governance tokens give holders voting rights on protocol decisions.", category: "DeFi", verdict: "trust", detail: "Token holders can vote on proposals." },
+  { text: "Wrapped tokens represent assets from other blockchains.", category: "DeFi", verdict: "trust", detail: "WBTC wraps Bitcoin for use in Ethereum DeFi." },
+  { text: "DeFi protocols never require KYC or identity verification.", category: "DeFi", verdict: "doubt", detail: "Some DeFi protocols implement KYC for certain features." },
+  { text: "Rug pulls occur when developers drain liquidity and abandon projects.", category: "DeFi", verdict: "trust", detail: "Malicious actors have stolen billions through rug pulls." },
+  { text: "All DEX trades are MEV-free and cannot be front-run.", category: "DeFi", verdict: "doubt", detail: "MEV bots actively front-run and sandwich DEX trades." },
+  { text: "Protocol-owned liquidity (POL) reduces reliance on mercenary capital.", category: "DeFi", verdict: "trust", detail: "Protocols owning their liquidity provides sustainable TVL." },
+  { text: "Money markets in DeFi allow lending and borrowing of crypto assets.", category: "DeFi", verdict: "trust", detail: "Aave and Compound operate as decentralized money markets." },
+  { text: "Flash loan attacks can manipulate prices within a single transaction.", category: "DeFi", verdict: "trust", detail: "Attackers use borrowed capital to exploit vulnerabilities." },
+  { text: "DeFi composability is sometimes called 'money legos'.", category: "DeFi", verdict: "trust", detail: "Protocols can be combined like building blocks." },
+  { text: "Vote escrow (ve) tokens lock governance tokens for increased voting power.", category: "DeFi", verdict: "trust", detail: "veCRV pioneered the vote escrow model." },
+  { text: "Real yield comes from actual protocol revenue, not token emissions.", category: "DeFi", verdict: "trust", detail: "Sustainable protocols generate yield from fees." },
+  { text: "LP tokens represent shares of liquidity pool ownership.", category: "DeFi", verdict: "trust", detail: "LP tokens can be staked or redeemed." },
+  { text: "DeFi on Layer 2s offers lower gas fees than mainnet.", category: "DeFi", verdict: "trust", detail: "L2 rollups reduce transaction costs." },
+  { text: "Chainlink is the most widely used oracle network in DeFi.", category: "DeFi", verdict: "trust", detail: "Chainlink provides price feeds to hundreds of protocols." },
+  { text: "All stablecoins maintain their peg perfectly at all times.", category: "DeFi", verdict: "doubt", detail: "Stablecoins regularly experience depegs." },
+  { text: "Leverage in DeFi can exceed 100x on some platforms.", category: "DeFi", verdict: "trust", detail: "High leverage carries extreme liquidation risk." },
+  { text: "All DeFi transactions are private and hidden from view.", category: "DeFi", verdict: "doubt", detail: "Most DeFi transactions are public." },
+  { text: "DeFi protocols can be paused by emergency mechanisms.", category: "DeFi", verdict: "trust", detail: "Many protocols include pause functionality." },
+  { text: "All DeFi yields are sustainable long-term.", category: "DeFi", verdict: "doubt", detail: "Many high yields come from temporary incentives." },
+  { text: "Sandwich attacks profit from front-running and back-running trades.", category: "DeFi", verdict: "trust", detail: "Attackers place orders around victim transactions." },
+  { text: "Perpetual futures on DeFi platforms have no expiration date.", category: "DeFi", verdict: "trust", detail: "Perps use funding rates instead of expiries." },
+  { text: "Time-weighted average price (TWAP) oracles resist manipulation.", category: "DeFi", verdict: "trust", detail: "TWAP averages prices over time." },
+  { text: "Liquidity bootstrapping pools (LBPs) enable fair token launches.", category: "DeFi", verdict: "trust", detail: "LBPs use changing weights to discover price." },
+  { text: "Slippage tolerance protects traders from price movements during swaps.", category: "DeFi", verdict: "trust", detail: "Setting slippage limits prevents unfavorable trades." },
+  { text: "Staking rewards come from protocol inflation or fees.", category: "DeFi", verdict: "trust", detail: "Rewards are funded by emissions or trading fees." },
+  { text: "Bonding curves determine token prices based on supply.", category: "DeFi", verdict: "trust", detail: "Mathematical curves set prices as tokens are minted." },
+  { text: "Vampire attacks drain liquidity from competing protocols.", category: "DeFi", verdict: "trust", detail: "SushiSwap's migration from Uniswap was a famous vampire attack." },
+  { text: "Lending protocol utilization rate affects interest rates.", category: "DeFi", verdict: "trust", detail: "Higher utilization typically means higher borrowing rates." },
+
+  // ===== NFTs (30) =====
+  { text: "NFT stands for Non-Fungible Token.", category: "NFTs", verdict: "trust", detail: "NFTs are unique digital tokens representing ownership." },
+  { text: "Owning an NFT always grants copyright ownership of the artwork.", category: "NFTs", verdict: "doubt", detail: "NFT ownership typically doesn't transfer copyright." },
+  { text: "CryptoPunks were minted before Bored Ape Yacht Club.", category: "NFTs", verdict: "trust", detail: "CryptoPunks launched in 2017; BAYC in April 2021." },
+  { text: "NFTs can only exist on the Ethereum blockchain.", category: "NFTs", verdict: "doubt", detail: "NFTs exist on Solana, Polygon, Bitcoin (Ordinals), and others." },
+  { text: "ERC-721 is the token standard for NFTs on Ethereum.", category: "NFTs", verdict: "trust", detail: "ERC-721 defines the standard interface for NFTs." },
+  { text: "NFT metadata is always stored on-chain.", category: "NFTs", verdict: "doubt", detail: "Most NFT metadata is stored off-chain on IPFS." },
+  { text: "Soulbound tokens (SBTs) are non-transferable NFTs.", category: "NFTs", verdict: "trust", detail: "SBTs represent credentials that shouldn't be sold." },
+  { text: "OpenSea is a decentralized protocol with no company behind it.", category: "NFTs", verdict: "doubt", detail: "OpenSea is a centralized company." },
+  { text: "NFT royalties are always enforced automatically on secondary sales.", category: "NFTs", verdict: "doubt", detail: "Royalty enforcement depends on marketplace policies." },
+  { text: "PFP stands for Profile Picture in the NFT context.", category: "NFTs", verdict: "trust", detail: "PFP NFTs are designed for social media profile pictures." },
+  { text: "Blue-chip NFTs maintain value regardless of market conditions.", category: "NFTs", verdict: "doubt", detail: "Even top NFT collections have experienced price drops." },
+  { text: "NFT minting always requires paying gas fees.", category: "NFTs", verdict: "doubt", detail: "Lazy minting and L2 solutions offer cheap minting." },
+  { text: "Dynamic NFTs can change their metadata based on external conditions.", category: "NFTs", verdict: "trust", detail: "Dynamic NFTs update based on oracles or events." },
+  { text: "All NFT projects have roadmaps that are fully delivered.", category: "NFTs", verdict: "doubt", detail: "Many NFT roadmaps go unfulfilled." },
+  { text: "NFT art is always created by the person selling it.", category: "NFTs", verdict: "doubt", detail: "Art theft and unauthorized minting are common." },
+  { text: "Gas wars occur during high-demand NFT mints.", category: "NFTs", verdict: "trust", detail: "Users compete with high gas fees." },
+  { text: "Rarity tools rank NFT traits by scarcity.", category: "NFTs", verdict: "trust", detail: "Rarity rankings help identify valuable traits." },
+  { text: "NFTs provide provable ownership and provenance.", category: "NFTs", verdict: "trust", detail: "Blockchain records create transparent ownership history." },
+  { text: "All NFTs have the same liquidity as cryptocurrencies.", category: "NFTs", verdict: "doubt", detail: "NFTs are typically far less liquid than tokens." },
+  { text: "Generative art NFTs are created algorithmically.", category: "NFTs", verdict: "trust", detail: "Art Blocks uses code to generate unique pieces." },
+  { text: "Floor price is the lowest listed price for an NFT collection.", category: "NFTs", verdict: "trust", detail: "Floor price shows minimum entry point." },
+  { text: "NFT wash trading inflates volume and apparent demand.", category: "NFTs", verdict: "trust", detail: "Traders buy and sell to themselves." },
+  { text: "NFT lending protocols allow using NFTs as collateral.", category: "NFTs", verdict: "trust", detail: "NFTfi and similar platforms enable NFT-backed loans." },
+  { text: "Ordinals are Bitcoin-native NFTs inscribed on satoshis.", category: "NFTs", verdict: "trust", detail: "Ordinals protocol enables NFT-like inscriptions on Bitcoin." },
+  { text: "ERC-6551 creates token-bound accounts for NFTs.", category: "NFTs", verdict: "trust", detail: "NFTs can own other assets through their own accounts." },
+  { text: "All NFT collections have equal artistic merit.", category: "NFTs", verdict: "doubt", detail: "Quality varies; many NFTs are low-effort." },
+  { text: "Compressed NFTs on Solana reduce minting costs dramatically.", category: "NFTs", verdict: "trust", detail: "State compression enables cheap minting." },
+  { text: "All NFTs will appreciate in value over time.", category: "NFTs", verdict: "doubt", detail: "Most NFTs lose significant value." },
+  { text: "Blur emerged as a major competitor to OpenSea.", category: "NFTs", verdict: "trust", detail: "Blur gained market share with trader-focused features." },
+  { text: "NFT utility can include access to events and communities.", category: "NFTs", verdict: "trust", detail: "Token-gating uses NFT ownership for exclusive access." },
+
+  // ===== SCALING (30) =====
+  { text: "Layer 2 solutions help scale blockchain by processing transactions off-chain.", category: "Scaling", verdict: "trust", detail: "L2s batch transactions and settle proofs on the main chain." },
+  { text: "Optimistic rollups assume transactions are valid unless challenged.", category: "Scaling", verdict: "trust", detail: "This is the core principle of Arbitrum and Optimism." },
+  { text: "ZK-rollups are slower than optimistic rollups because of proof generation.", category: "Scaling", verdict: "trust", detail: "ZK proof generation is computationally intensive." },
+  { text: "Polygon is exclusively a Layer 2 for Ethereum.", category: "Scaling", verdict: "doubt", detail: "Polygon offers multiple scaling solutions including its own PoS chain." },
+  { text: "The Lightning Network is Bitcoin's main Layer 2 scaling solution.", category: "Scaling", verdict: "trust", detail: "Lightning enables fast, cheap Bitcoin payments." },
+  { text: "All Layer 2 solutions inherit the full security of Ethereum.", category: "Scaling", verdict: "doubt", detail: "Security inheritance varies between sidechains and rollups." },
+  { text: "Arbitrum is an optimistic rollup on Ethereum.", category: "Scaling", verdict: "trust", detail: "Arbitrum uses fraud proofs and inherits Ethereum security." },
+  { text: "ZK-SNARKs require a trusted setup ceremony.", category: "Scaling", verdict: "trust", detail: "SNARKs need initial setup; STARKs are trustless." },
+  { text: "L2 bridges can be targets for hackers.", category: "Scaling", verdict: "trust", detail: "Bridge exploits have resulted in billions in losses." },
+  { text: "Optimism uses the OP Stack for its rollup infrastructure.", category: "Scaling", verdict: "trust", detail: "The OP Stack is open-source and used by multiple chains." },
+  { text: "Sequencers order transactions on most L2 rollups.", category: "Scaling", verdict: "trust", detail: "Sequencers collect and order transactions." },
+  { text: "All L2s have fully decentralized sequencers today.", category: "Scaling", verdict: "doubt", detail: "Most L2s currently have centralized sequencers." },
+  { text: "zkSync uses zero-knowledge proofs for transaction validity.", category: "Scaling", verdict: "trust", detail: "zkSync is a ZK-rollup on Ethereum." },
+  { text: "State channels enable off-chain interactions between parties.", category: "Scaling", verdict: "trust", detail: "Channels allow many transactions with only opening/closing on-chain." },
+  { text: "Fraud proofs allow challenging invalid optimistic rollup transactions.", category: "Scaling", verdict: "trust", detail: "The challenge period enables disputing fraudulent transactions." },
+  { text: "L2 fees are always 100x cheaper than Ethereum mainnet.", category: "Scaling", verdict: "doubt", detail: "Fee reduction varies; not a fixed amount." },
+  { text: "EIP-4844 introduced blob transactions to reduce L2 costs.", category: "Scaling", verdict: "trust", detail: "Proto-danksharding created dedicated space for rollup data." },
+  { text: "Withdrawal from optimistic rollups takes about 7 days.", category: "Scaling", verdict: "trust", detail: "The challenge period requires waiting." },
+  { text: "ZK-rollup withdrawals are faster than optimistic rollup withdrawals.", category: "Scaling", verdict: "trust", detail: "Validity proofs don't require a challenge period." },
+  { text: "Base is an L2 built on the OP Stack by Coinbase.", category: "Scaling", verdict: "trust", detail: "Base launched in 2023." },
+  { text: "Sidechains have their own consensus and security.", category: "Scaling", verdict: "trust", detail: "Unlike rollups, sidechains don't derive security from Ethereum." },
+  { text: "All Ethereum dApps work automatically on L2s.", category: "Scaling", verdict: "doubt", detail: "Apps need deployment and may need modifications." },
+  { text: "Rollup TVL has grown to billions of dollars.", category: "Scaling", verdict: "trust", detail: "Major rollups hold significant value." },
+  { text: "ZK-STARKs are quantum-resistant.", category: "Scaling", verdict: "trust", detail: "STARKs use hash functions for quantum security." },
+  { text: "Escape hatches allow users to exit rollups if operators misbehave.", category: "Scaling", verdict: "trust", detail: "Users can force withdrawals directly through L1." },
+  { text: "Scroll is a zkEVM rollup.", category: "Scaling", verdict: "trust", detail: "Scroll provides EVM-equivalent ZK-rollup technology." },
+  { text: "Transaction finality on L2s depends on L1 finality.", category: "Scaling", verdict: "trust", detail: "L2 transactions inherit finality from their settlement layer." },
+  { text: "Native account abstraction is built into zkSync.", category: "Scaling", verdict: "trust", detail: "zkSync Era includes native account abstraction." },
+  { text: "StarkNet uses Cairo programming language for smart contracts.", category: "Scaling", verdict: "trust", detail: "Cairo is designed for provable computation." },
+  { text: "Data availability is crucial for rollup security.", category: "Scaling", verdict: "trust", detail: "Users must be able to reconstruct state from available data." },
+
+  // ===== SECURITY (30) =====
+  { text: "A 51% attack allows an attacker to reverse confirmed transactions.", category: "Security", verdict: "trust", detail: "With majority hash power, attackers can reorganize the blockchain." },
+  { text: "Hardware wallets store private keys offline for better security.", category: "Security", verdict: "trust", detail: "Hardware wallets keep keys in secure elements." },
+  { text: "Multi-signature wallets require multiple keys to authorize transactions.", category: "Security", verdict: "trust", detail: "Multisig adds security by requiring M-of-N signatures." },
+  { text: "Smart contract audits guarantee the code is free of vulnerabilities.", category: "Security", verdict: "doubt", detail: "Audits reduce risk but cannot guarantee bug-free code." },
+  { text: "Phishing is the most common way crypto users lose funds.", category: "Security", verdict: "trust", detail: "Social engineering accounts for most user fund losses." },
+  { text: "Seed phrases should be stored digitally for easy backup.", category: "Security", verdict: "doubt", detail: "Digital storage increases hack risk; offline backups are recommended." },
+  { text: "Two-factor authentication (2FA) adds an extra layer of security.", category: "Security", verdict: "trust", detail: "2FA requires a second verification method." },
+  { text: "Private keys should be shared with trusted family members.", category: "Security", verdict: "doubt", detail: "Private keys should never be shared." },
+  { text: "Blockchain transactions are reversible if you contact support.", category: "Security", verdict: "doubt", detail: "Blockchain transactions are irreversible." },
+  { text: "Honeypot scams create tokens that can't be sold after purchase.", category: "Security", verdict: "trust", detail: "Malicious contracts prevent selling." },
+  { text: "Verifying contract addresses prevents interacting with fake tokens.", category: "Security", verdict: "trust", detail: "Always verify addresses from official sources." },
+  { text: "All tokens on decentralized exchanges are safe to trade.", category: "Security", verdict: "doubt", detail: "Anyone can create tokens; many are scams." },
+  { text: "Time-locked contracts prevent immediate withdrawal of funds.", category: "Security", verdict: "trust", detail: "Timelocks add security by delaying operations." },
+  { text: "Dusting attacks track wallet activity through small transactions.", category: "Security", verdict: "trust", detail: "Attackers send tiny amounts to link addresses." },
+  { text: "All airdrops are legitimate and safe to claim.", category: "Security", verdict: "doubt", detail: "Many airdrops are scams." },
+  { text: "Formal verification mathematically proves smart contract correctness.", category: "Security", verdict: "trust", detail: "Formal verification provides highest assurance." },
+  { text: "Revoking token approvals reduces exposure to smart contract risks.", category: "Security", verdict: "trust", detail: "Unused approvals can be exploited." },
+  { text: "SIM swapping can compromise SMS-based 2FA.", category: "Security", verdict: "trust", detail: "Attackers convince carriers to port phone numbers." },
+  { text: "All VPNs provide equal protection for crypto activities.", category: "Security", verdict: "doubt", detail: "VPN security varies." },
+  { text: "Browser extensions can pose security risks to crypto wallets.", category: "Security", verdict: "trust", detail: "Malicious extensions can steal wallet data." },
+  { text: "Clipboard hijacking replaces copied addresses with attacker addresses.", category: "Security", verdict: "trust", detail: "Malware monitors clipboard and substitutes addresses." },
+  { text: "Bug bounties incentivize researchers to find vulnerabilities.", category: "Security", verdict: "trust", detail: "Protocols pay rewards for disclosed issues." },
+  { text: "Transaction simulation can detect malicious contract interactions.", category: "Security", verdict: "trust", detail: "Wallets can simulate transactions before signing." },
+  { text: "All hardware wallets have the same security level.", category: "Security", verdict: "doubt", detail: "Security implementations vary." },
+  { text: "Blind signing transactions without reviewing is safe.", category: "Security", verdict: "doubt", detail: "Always review transaction details." },
+  { text: "Open-source code is more secure because anyone can audit it.", category: "Security", verdict: "trust", detail: "Transparency allows community review." },
+  { text: "Contract upgradability introduces additional security risks.", category: "Security", verdict: "trust", detail: "Upgradable contracts can be changed." },
+  { text: "MEV bots can steal value from user transactions.", category: "Security", verdict: "trust", detail: "Front-running and sandwich attacks extract value." },
+  { text: "All blockchain explorers show accurate and complete data.", category: "Security", verdict: "doubt", detail: "Verify through multiple sources." },
+  { text: "Multisig can protect against single key compromise.", category: "Security", verdict: "trust", detail: "Requiring multiple signatures prevents single point of failure." },
+
+  // ===== STABLECOINS (25) =====
+  { text: "USDC is fully backed by cash and short-term US treasuries.", category: "Stablecoins", verdict: "trust", detail: "Circle maintains reserves to back USDC 1:1." },
+  { text: "Algorithmic stablecoins are backed by fiat currency reserves.", category: "Stablecoins", verdict: "doubt", detail: "Algorithmic stablecoins use code and incentives, not reserves." },
+  { text: "Terra's UST collapse in 2022 caused billions in losses.", category: "Stablecoins", verdict: "trust", detail: "UST's depegging led to ~$40B in value destruction." },
+  { text: "Tether (USDT) has always provided full transparency on its reserves.", category: "Stablecoins", verdict: "doubt", detail: "Tether has faced scrutiny over reserve transparency." },
+  { text: "Stablecoins are immune to regulatory oversight.", category: "Stablecoins", verdict: "doubt", detail: "Stablecoins face increasing regulation globally." },
+  { text: "DAI is a decentralized stablecoin governed by MakerDAO.", category: "Stablecoins", verdict: "trust", detail: "DAI is managed by MKR holders through governance." },
+  { text: "Stablecoins can depeg from their target value.", category: "Stablecoins", verdict: "trust", detail: "Various factors can cause depegs." },
+  { text: "All stablecoins are pegged to the US dollar.", category: "Stablecoins", verdict: "doubt", detail: "Stablecoins exist for EUR, gold, and other assets." },
+  { text: "Fiat-backed stablecoins require trust in the issuing entity.", category: "Stablecoins", verdict: "trust", detail: "Users trust issuers to maintain reserves." },
+  { text: "Overcollateralized stablecoins hold more collateral than coins issued.", category: "Stablecoins", verdict: "trust", detail: "This buffer protects against value drops." },
+  { text: "All centralized stablecoins can freeze user funds.", category: "Stablecoins", verdict: "trust", detail: "USDC, USDT, and others have blacklist capabilities." },
+  { text: "FRAX uses a fractional-algorithmic model.", category: "Stablecoins", verdict: "trust", detail: "FRAX combines partial collateral with algorithmic mechanisms." },
+  { text: "Stablecoin yields are always risk-free.", category: "Stablecoins", verdict: "doubt", detail: "Yield sources carry smart contract and credit risks." },
+  { text: "Stablecoin arbitrage helps maintain price stability.", category: "Stablecoins", verdict: "trust", detail: "Arbitrageurs profit from deviations, pushing prices to peg." },
+  { text: "CBDCs are the same as decentralized stablecoins.", category: "Stablecoins", verdict: "doubt", detail: "Central bank digital currencies are government-issued." },
+  { text: "Liquidation mechanisms protect overcollateralized stablecoins.", category: "Stablecoins", verdict: "trust", detail: "Undercollateralized positions are liquidated." },
+  { text: "Stablecoins enable faster cross-border payments than traditional banking.", category: "Stablecoins", verdict: "trust", detail: "Blockchain settlement is faster than SWIFT." },
+  { text: "All stablecoins have the same risk profile.", category: "Stablecoins", verdict: "doubt", detail: "Risks vary based on design and collateral." },
+  { text: "GHO is Aave's native stablecoin.", category: "Stablecoins", verdict: "trust", detail: "GHO is minted against Aave collateral positions." },
+  { text: "Stablecoins can operate across multiple blockchains.", category: "Stablecoins", verdict: "trust", detail: "USDC and USDT exist on many chains." },
+  { text: "All stablecoin depegs are permanent.", category: "Stablecoins", verdict: "doubt", detail: "Many depegs are temporary and recover." },
+  { text: "LUSD is Liquity Protocol's decentralized stablecoin.", category: "Stablecoins", verdict: "trust", detail: "LUSD is backed only by ETH." },
+  { text: "Stablecoin interest rates can exceed traditional savings accounts.", category: "Stablecoins", verdict: "trust", detail: "DeFi lending often offers higher rates with higher risks." },
+  { text: "All stablecoins require KYC to purchase.", category: "Stablecoins", verdict: "doubt", detail: "Decentralized stablecoins can be obtained via DeFi." },
+  { text: "Stablecoin market cap exceeds $100 billion.", category: "Stablecoins", verdict: "trust", detail: "Combined stablecoin market cap is substantial." },
+
+  // ===== WEB3 & MISC (25) =====
+  { text: "IPFS stands for InterPlanetary File System.", category: "Web3", verdict: "trust", detail: "IPFS is a peer-to-peer protocol for distributed data storage." },
+  { text: "All Web3 applications are fully decentralized.", category: "Web3", verdict: "doubt", detail: "Many 'Web3' apps have centralized components." },
+  { text: "Decentralized identity (DID) gives users control over their digital identity.", category: "Web3", verdict: "trust", detail: "DIDs enable self-sovereign identity." },
+  { text: "The blockchain trilemma states you can't have scalability, security, and decentralization together.", category: "Web3", verdict: "trust", detail: "This describes fundamental blockchain tradeoffs." },
+  { text: "Web3 eliminates the need for all intermediaries.", category: "Web3", verdict: "doubt", detail: "Some intermediation may still be needed." },
+  { text: "Decentralized storage spreads data across multiple nodes.", category: "Web3", verdict: "trust", detail: "Filecoin, Arweave, and IPFS distribute data." },
+  { text: "Smart contracts can replace all traditional legal agreements.", category: "Web3", verdict: "doubt", detail: "Smart contracts have limitations." },
+  { text: "Permissionless systems allow anyone to participate without approval.", category: "Web3", verdict: "trust", detail: "Public blockchains are permissionless by design." },
+  { text: "Content addressing uses hashes instead of locations to retrieve data.", category: "Web3", verdict: "trust", detail: "IPFS uses content hashes for data retrieval." },
+  { text: "All blockchains are public and transparent.", category: "Web3", verdict: "doubt", detail: "Private and permissioned blockchains exist." },
+  { text: "Data portability is a key benefit of decentralized systems.", category: "Web3", verdict: "trust", detail: "Users can take their data between applications." },
+  { text: "Decentralized social networks resist censorship.", category: "Web3", verdict: "trust", detail: "No central authority can remove content." },
+  { text: "All DAOs are more efficient than traditional companies.", category: "Web3", verdict: "doubt", detail: "DAO governance can be slower and complex." },
+  { text: "Web3 wallets serve as universal login across applications.", category: "Web3", verdict: "trust", detail: "Wallet signatures replace username/password." },
+  { text: "All Web3 projects are open source.", category: "Web3", verdict: "doubt", detail: "Some projects keep code proprietary." },
+  { text: "Censorship resistance is a core property of public blockchains.", category: "Web3", verdict: "trust", detail: "No single entity can prevent valid transactions." },
+  { text: "Tokenization can represent ownership of any asset.", category: "Web3", verdict: "trust", detail: "Real estate, art, securities can be tokenized." },
+  { text: "The semantic web and Web3 are the same thing.", category: "Web3", verdict: "doubt", detail: "Web3 (crypto) differs from Web 3.0 (semantic web)." },
+  { text: "Arweave provides permanent decentralized storage.", category: "Web3", verdict: "trust", detail: "Arweave's model incentivizes perpetual storage." },
+  { text: "All Web3 applications are interoperable by default.", category: "Web3", verdict: "doubt", detail: "Interoperability varies; standards help but aren't universal." },
+  { text: "Web3 requires users to manage their own private keys.", category: "Web3", verdict: "trust", detail: "Self-custody is fundamental to Web3." },
+  { text: "All Web3 services are free to use.", category: "Web3", verdict: "doubt", detail: "Gas fees and service fees apply." },
+  { text: "DAO stands for Decentralized Autonomous Organization.", category: "Web3", verdict: "trust", detail: "DAOs are blockchain-based organizations governed by smart contracts." },
+  { text: "All DAO members have equal voting power regardless of token holdings.", category: "Web3", verdict: "doubt", detail: "Most DAOs use token-weighted voting." },
+  { text: "Quadratic voting gives more weight to minority opinions.", category: "Web3", verdict: "trust", detail: "Quadratic voting's cost structure balances majority power." },
 ];
 
-const verbs = [
-  'accelerate',
-  'debate',
-  'validate',
-  'audit',
-  'escalate',
-  'contextualize',
-  'safeguard',
-  'flag',
-  'attenuate',
-  'chronicle',
-  'benchmark',
-  'illuminate'
-];
-
-const objects = [
-  'dispute narratives',
-  'MEV bundle payouts',
-  'liquidity ragged edges',
-  'NFT provenance layers',
-  'zk-rollup fallbacks',
-  'EthCC badge drops',
-  'cross-chain bridge proofing',
-  'memecoin authenticity scans',
-  'prediction market angle locks',
-  'intelligent contract firmware',
-  'real-time doc proofing',
-  'Optimistic Democracy voting trails',
-  'DAO treasury sweeps',
-  'crypto compliance pulses'
-];
-
-const categories = ['GenLayer', 'Web3', 'Crypto', 'Governance', 'Security', 'Infrastructure', 'Predictions', 'Culture', 'Ethics', 'Research'];
-
-function deterministicPick<T>(list: T[], index: number, offset: number) {
-  return list[(index * offset) % list.length];
-}
-
-function buildDetail(subject: string, verb: string, object: string, category: string) {
-  const cleanSubject = subject.toLowerCase();
-  return `The ${cleanSubject} ${verb}s ${object} to keep ${category.toLowerCase()} flows coherent.`;
-}
-
-export const scenarioClaims: ScenarioClaim[] = Array.from({ length: 1000 }, (_, idx) => {
-  const subject = deterministicPick(subjects, idx, 3);
-  const verb = deterministicPick(verbs, idx, 5);
-  const object = deterministicPick(objects, idx, 7);
-  const category = deterministicPick(categories, idx, 11);
-  const text = `${subject} ${verb} ${object}.`;
-  const detail = buildDetail(subject, verb, object, category);
-  const verdict = idx % 2 === 0 ? 'trust' : 'doubt';
-
-  return {
-    id: `claim-${idx + 1}`,
-    text,
-    category,
-    verdict,
-    detail
-  };
-});
-
-function gcd(a: number, b: number) {
-  while (b) {
-    const temp = b;
-    b = a % b;
-    a = temp;
-  }
-  return a;
-}
+export const scenarioClaims: ScenarioClaim[] = curatedClaims.map((claim, idx) => ({
+  id: `claim-${idx + 1}`,
+  ...claim
+}));
 
 function hashSeed(seed: string) {
   let hash = 0;
@@ -99,24 +339,29 @@ function hashSeed(seed: string) {
   return Math.abs(hash);
 }
 
-export function buildScenarioQueue(count: number, seed: string) {
+function seededShuffle<T>(array: T[], seed: number): T[] {
+  const result = [...array];
+  let currentSeed = seed;
+  
+  const random = () => {
+    currentSeed = (currentSeed * 1103515245 + 12345) % 2147483648;
+    return currentSeed / 2147483648;
+  };
+  
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  
+  return result;
+}
+
+export function buildScenarioQueue(count: number, seed: string): ScenarioClaim[] {
   const sanitizedSeed = seed || 'neutral';
   const hash = hashSeed(sanitizedSeed);
-  const len = scenarioClaims.length;
-  const desired = Math.min(count, len);
-  const start = hash % len;
-  let step = (hash % (len - 1)) + 1;
-  while (gcd(step, len) !== 1) {
-    step = (step % (len - 1)) + 1;
-  }
-
-  const queue: ScenarioClaim[] = [];
-  let index = start;
-  for (let i = 0; i < desired; i += 1) {
-    queue.push(scenarioClaims[index]);
-    index = (index + step) % len;
-  }
-  return queue;
+  const shuffled = seededShuffle(scenarioClaims, hash);
+  const desired = Math.min(count, shuffled.length);
+  return shuffled.slice(0, desired);
 }
 
 export const TOTAL_SCENARIOS = scenarioClaims.length;

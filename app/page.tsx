@@ -42,14 +42,17 @@ export default function LandingPage() {
         <section className="card-gradient rounded-3xl p-8 space-y-6">
           <GenLayerLogo variant="white" />
           <p className="text-xs uppercase tracking-[0.5em] text-genlayer-accent text-center">
-            GenLayer · Trust or Doubt
+            Trust or Doubt
+          </p>
+          <p className="text-sm text-gray-400 text-center">
+            Can you outsmart the AI validators? Test your judgment against decentralized consensus.
+          </p>
+          <p className="text-2xl font-semibold text-genlayer-accent text-center">
+            GENLAYER
           </p>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-center">
-            GenLayer — the trust infrastructure for AI-driven decisions.
+            The trust infrastructure for AI-driven decisions.
           </h1>
-          <p className="text-lg text-gray-200 text-center">
-            Sign in on this landing page with a username and pick your lane. Single and multiplayer choices happen here, so every session starts with intent.
-          </p>
           <form className="space-y-4" onSubmit={handleStart}>
             <label className="block text-sm uppercase tracking-[0.3em] text-white/60">Username</label>
             <div>

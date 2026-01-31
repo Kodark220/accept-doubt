@@ -101,7 +101,7 @@ export default function GameExperience({
   };
 
   const handleNextClick = () => {
-    if (!readyForNext) return;
+    // Allow skipping even before voting or countdown ends
     const finalState = pendingRound ? finalizePendingRound() : null;
     const roundsPlayed = finalState ? finalState.roundsPlayed : gameState.roundsPlayed;
     if (roundsPlayed >= TOTAL_ROUNDS) {
@@ -110,6 +110,9 @@ export default function GameExperience({
       return;
     }
     setReadyForNext(false);
+    setTimedOut(false);
+    setTimer(30);
+    clearCountdown();
     setCurrentIndex((prev) => Math.min(prev + 1, scenarioQueue.length - 1));
     setActivePanel('play');
   };
@@ -167,7 +170,7 @@ export default function GameExperience({
           <span className="text-xs uppercase tracking-[0.4em] text-genlayer-accent">{modeLabel}</span>
           {contractMode && (
             <p className="text-[0.65rem] uppercase tracking-[0.35em] text-genlayer-blue/80">
-              Contract mode enabled · still using mock helpers until deployment
+              Live on GenLayer StudioNet · AI validators reaching consensus
             </p>
           )}
         </div>
@@ -226,7 +229,7 @@ export default function GameExperience({
             <div className="flex gap-3">
               <button
                 onClick={handleNextClick}
-                disabled={!readyForNext || gameOver}
+                disabled={gameOver}
                 className="flex-1 rounded-2xl border border-white/30 py-3 text-sm font-semibold uppercase tracking-[0.4em] disabled:opacity-40"
               >
                 {gameOver ? 'Game complete' : 'Next claim'}
