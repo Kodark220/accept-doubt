@@ -23,153 +23,146 @@ import {
 import { GameMode, TOTAL_ROUNDS } from './constants';
 
 type PendingRound = {
-  scenario: ScenarioClaim;
-  playerChoice: 'trust' | 'doubt';
-  consensus: ConsensusResult;
-};
-
-type PanelId = 'play' | 'history';
-
-const panelOptions: { id: PanelId; label: string }[] = [
-  { id: 'play', label: 'Live play' },
-  { id: 'history', label: 'Round history' }
-];
-
-type GameExperienceProps = {
-  initialQueue: ScenarioClaim[];
-  initialMode: GameMode;
-  initialUsername: string;
-  dailyScenario: ScenarioClaim;
-};
-
-export default function GameExperience({
-  initialMode,
-  initialUsername,
-  initialQueue,
-  dailyScenario
-}: GameExperienceProps) {
-  const [scenarioQueue, setScenarioQueue] = useState(initialQueue);
-  const [gameState, setGameState] = useState(() => initialGameState(TOTAL_ROUNDS));
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [pendingRound, setPendingRound] = useState<PendingRound | null>(null);
-  const [lastRound, setLastRound] = useState<RoundHistory | undefined>(undefined);
-  const [readyForNext, setReadyForNext] = useState(false);
-  const [activePanel, setActivePanel] = useState<PanelId>('play');
-  const [timer, setTimer] = useState(30);
-  const [timedOut, setTimedOut] = useState(false);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  
-  // Wallet connection via wagmi
-  const { address: walletAddress, isConnected, connector: activeConnector } = useAccount();
-  const { connect, connectors, isPending: isConnecting } = useConnect();
-  const { disconnect } = useDisconnect();
-  
-  // Score submission state
-  const [scoreSubmitted, setScoreSubmitted] = useState(false);
-  const [submittingScore, setSubmittingScore] = useState(false);
-  const [txHash, setTxHash] = useState<string | null>(null);
-  const [showWalletOptions, setShowWalletOptions] = useState(false);
-
-  const currentScenario = scenarioQueue[currentIndex];
-  const gameOver = gameState.roundsPlayed >= TOTAL_ROUNDS;
-  const canVote = !!currentScenario && !pendingRound && !readyForNext && !gameOver;
-  const canVoteWithTimer = canVote && !timedOut;
-
-  const clearCountdown = () => {
-    if (countdownRef.current) {
-      clearInterval(countdownRef.current);
-      countdownRef.current = null;
-    }
-  };
-
-  // Submit final score to GenLayer blockchain
-  const handleSubmitScore = useCallback(async () => {
-    if (!walletAddress || submittingScore || scoreSubmitted) return;
-    
-    setSubmittingScore(true);
-    try {
-      const result = await submitFinalScore(
-        walletAddress,
-        initialUsername,
-        gameState.xp,
-        gameState.correct,
-        TOTAL_ROUNDS
-      );
-      if (result?.hash) {
-        setTxHash(result.hash);
-        setScoreSubmitted(true);
-        console.log('✅ Score submitted to GenLayer:', result.hash);
-      }
-    } catch (error) {
-      console.error('Failed to submit score:', error);
-      alert('Failed to submit score. Please try again.');
-    } finally {
-      setSubmittingScore(false);
-    }
-  }, [walletAddress, submittingScore, scoreSubmitted, initialUsername, gameState.xp, gameState.correct]);
-
-  const finalizePendingRound = (appealOutcome?: AppealOutcome) => {
-    if (!pendingRound) return null;
-    const updated = recordRound(
-      gameState,
-      pendingRound.scenario,
-      pendingRound.playerChoice,
-      pendingRound.consensus,
-      appealOutcome
-    );
-    setGameState(updated);
-    setLastRound(updated.history[updated.history.length - 1]);
-    setPendingRound(null);
-    setReadyForNext(true);
-    return updated;
-  };
-
-  const handleVote = async (choice: 'trust' | 'doubt') => {
-    if (!currentScenario || !canVoteWithTimer) return;
-    if (timedOut) return;
-    
-    clearCountdown();
-    
-    // INSTANT feedback - show result immediately
-    const instantResult: ConsensusResult = {
-      consensus: Math.random() > 0.5 ? 'trust' : 'doubt',
-      confidence: 0.7 + Math.random() * 0.25,
-      explanation: 'AI consensus in progress...'
-    };
-    
-    const isLastRound = gameState.roundsPlayed === TOTAL_ROUNDS - 1;
-    
-    if (isLastRound) {
-      // Last round: finalize immediately and show score
-      const updated = recordRound(
-        gameState,
-        currentScenario,
-        choice,
-        instantResult,
-        undefined
-      );
-      setGameState(updated);
-      setLastRound(updated.history[updated.history.length - 1]);
-      setPendingRound(null);
-      setReadyForNext(false);
-    } else {
-      // Other rounds: show pending state instantly
-      setPendingRound({ scenario: currentScenario, playerChoice: choice, consensus: instantResult });
-      setReadyForNext(true);
-    }
-    
-    // Fire GenLayer in background (non-blocking) - updates silently
-    resolveConsensus(currentScenario)
-      .then((realConsensus) => {
-        // Optionally update with real result if still on same round
-        console.log('🎯 GenLayer consensus:', realConsensus);
-      })
-      .catch(() => {});
-  };
-
-  const requestAppeal = async () => {
-    if (!pendingRound) return;
-    const outcome = await resolveAppeal(pendingRound.consensus);
+          <div>
+            {gameOver ? (
+              // GAME OVER - Show final score prominently
+              <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-6">
+                {scoreSubmitted ? (
+                  // CONFIRMED SCORE - Show only the blockchain-confirmed score
+                  <>
+                    <div className="bg-green-500/10 border-2 border-green-500/50 rounded-2xl p-6 space-y-4">
+                      <p className="text-xs uppercase tracking-[0.5em] text-green-400">✅ Blockchain Confirmed</p>
+                      <h2 className="text-3xl font-bold text-white">Score on GenLayer</h2>
+                      <div className="text-7xl font-bold text-green-400">{gameState.xp} XP</div>
+                      <div className="text-lg text-white/80">
+                        <span className="font-semibold">{initialUsername}</span> • {leaderboard.accuracy}% Accuracy
+                      </div>
+                      {txHash && (
+                        <p className="text-xs text-gray-400 break-all pt-2 border-t border-white/10">
+                          TX: {txHash}
+                        </p>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  // UNCONFIRMED - Show full stats and submit option
+                  <>
+                    <p className="text-xs uppercase tracking-[0.5em] text-genlayer-accent">🎉 Game Complete!</p>
+                    <h2 className="text-4xl font-bold text-white">Final Score</h2>
+                    <div className="text-6xl font-bold text-genlayer-blue">{gameState.xp} XP</div>
+                    <div className="grid grid-cols-2 gap-4 text-left">
+                      <div className="bg-white/5 rounded-xl p-4">
+                        <p className="text-xs text-gray-400 uppercase">Accuracy</p>
+                        <p className="text-2xl font-bold text-white">{leaderboard.accuracy}%</p>
+                      </div>
+                      <div className="bg-white/5 rounded-xl p-4">
+                        <p className="text-xs text-gray-400 uppercase">Correct</p>
+                        <p className="text-2xl font-bold text-white">{gameState.correct}/{TOTAL_ROUNDS}</p>
+                      </div>
+                      <div className="bg-white/5 rounded-xl p-4">
+                        <p className="text-xs text-gray-400 uppercase">Player</p>
+                        <p className="text-xl font-bold text-white truncate">{initialUsername}</p>
+                      </div>
+                      <div className="bg-white/5 rounded-xl p-4">
+                        <p className="text-xs text-gray-400 uppercase">Appeals Won</p>
+                        <p className="text-2xl font-bold text-white">{gameState.appealsWon}</p>
+                      </div>
+                    </div>
+                    {/* Submit Score to Blockchain */}
+                    <div className="border-t border-white/10 pt-6 space-y-3">
+                      <p className="text-xs uppercase tracking-[0.3em] text-gray-400">
+                        Submit to GenLayer Blockchain
+                      </p>
+                      {!isConnected ? (
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowWalletOptions(!showWalletOptions)}
+                            disabled={isConnecting}
+                            className="w-full rounded-2xl border-2 border-dashed border-white/30 px-6 py-4 text-sm font-semibold tracking-[0.1em] text-white/70 hover:border-genlayer-blue hover:text-genlayer-blue transition"
+                          >
+                            {isConnecting ? '🔄 Connecting...' : '🔗 Connect Wallet to Submit Score'}
+                          </button>
+                          {showWalletOptions && (
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-genlayer-dark border border-white/20 rounded-2xl p-3 space-y-2 z-50 min-w-[220px] shadow-xl">
+                              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Select Wallet</p>
+                              {connectors.map((connector) => (
+                                <button
+                                  key={connector.uid}
+                                  onClick={() => {
+                                    connect({ connector });
+                                    setShowWalletOptions(false);
+                                  }}
+                                  disabled={isConnecting}
+                                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition text-left disabled:opacity-50"
+                                >
+                                  <span className="text-lg">
+                                    {connector.name === 'MetaMask' && '🦊'}
+                                    {connector.name === 'WalletConnect' && '🔗'}
+                                    {connector.name === 'Coinbase Wallet' && '🔵'}
+                                    {connector.name === 'Injected' && '💉'}
+                                    {!['MetaMask', 'WalletConnect', 'Coinbase Wallet', 'Injected'].includes(connector.name) && '👛'}
+                                  </span>
+                                  <span className="text-sm text-white">{connector.name}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <button
+                          onClick={handleSubmitScore}
+                          disabled={submittingScore}
+                          className="w-full rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-base font-semibold tracking-[0.2em] text-white disabled:opacity-50"
+                        >
+                          {submittingScore ? '⏳ Submitting to GenLayer...' : '📝 Sign & Submit Score'}
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+                <button
+                  onClick={restartGame}
+                  className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
+                >
+                  Play Again
+                </button>
+              </section>
+            ) : currentScenario ? (
+              <>
+                <ScenarioDisplay
+                  current={currentScenario}
+                  round={currentRoundNumber}
+                  total={TOTAL_ROUNDS}
+                />
+                <Voting
+                  disabled={!canVoteWithTimer}
+                  onVote={handleVote}
+                />
+                {pendingRound && (
+                  <AppealResolution
+                    pending={pendingRound}
+                    onAppeal={requestAppeal}
+                  />
+                )}
+                {lastRound && <RoundResults lastRound={lastRound} />}
+                <div className="flex gap-2 mt-4">
+                  <button
+                    onClick={handleNextClick}
+                    disabled={gameOver}
+                    className="flex-1 rounded-2xl border border-white/30 py-3 text-sm font-semibold uppercase tracking-[0.4em] disabled:opacity-40"
+                  >
+                    {gameOver ? 'Game complete' : 'Next claim'}
+                  </button>
+                  <button
+                    onClick={restartGame}
+                    className="flex-1 rounded-2xl border border-white/20 py-3 text-sm font-semibold uppercase tracking-[0.4em]"
+                  >
+                    Restart
+                  </button>
+                </div>
+              </>
+            ) : null}
+          </div>
     finalizePendingRound(outcome);
   };
 
@@ -229,6 +222,7 @@ export default function GameExperience({
   };
 
   const leaderboard = leaderboardSnapshot(gameState);
+  const score = leaderboard.score;
   const modeLabel = initialMode === 'single' ? 'Single player' : 'Multiplayer';
   const currentRoundNumber = Math.min(currentIndex + 1, scenarioQueue.length);
   const contractMode = isContractMode();
@@ -354,7 +348,7 @@ export default function GameExperience({
                     <div className="bg-green-500/10 border-2 border-green-500/50 rounded-2xl p-6 space-y-4">
                       <p className="text-xs uppercase tracking-[0.5em] text-green-400">✅ Blockchain Confirmed</p>
                       <h2 className="text-3xl font-bold text-white">Score on GenLayer</h2>
-                      <div className="text-7xl font-bold text-green-400">{gameState.xp} XP</div>
+                      <div className="text-7xl font-bold text-green-400">{score} / 100</div>
                       <div className="text-lg text-white/80">
                         <span className="font-semibold">{initialUsername}</span> • {leaderboard.accuracy}% Accuracy
                       </div>
@@ -370,7 +364,7 @@ export default function GameExperience({
                   <>
                     <p className="text-xs uppercase tracking-[0.5em] text-genlayer-accent">🎉 Game Complete!</p>
                     <h2 className="text-4xl font-bold text-white">Final Score</h2>
-                    <div className="text-6xl font-bold text-genlayer-blue">{gameState.xp} XP</div>
+                    <div className="text-6xl font-bold text-genlayer-blue">{score} / 100</div>
                     <div className="grid grid-cols-2 gap-4 text-left">
                       <div className="bg-white/5 rounded-xl p-4">
                         <p className="text-xs text-gray-400 uppercase">Accuracy</p>
@@ -389,7 +383,6 @@ export default function GameExperience({
                         <p className="text-2xl font-bold text-white">{gameState.appealsWon}</p>
                       </div>
                     </div>
-                    
                     {/* Submit Score to Blockchain */}
                     <div className="border-t border-white/10 pt-6 space-y-3">
                       <p className="text-xs uppercase tracking-[0.3em] text-gray-400">
@@ -404,7 +397,6 @@ export default function GameExperience({
                           >
                             {isConnecting ? '🔄 Connecting...' : '🔗 Connect Wallet to Submit Score'}
                           </button>
-                          
                           {showWalletOptions && (
                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-genlayer-dark border border-white/20 rounded-2xl p-3 space-y-2 z-50 min-w-[220px] shadow-xl">
                               <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Select Wallet</p>
@@ -443,11 +435,13 @@ export default function GameExperience({
                     </div>
                   </>
                 )}
-                
                 <button
                   onClick={restartGame}
                   className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
                 >
+                  Play Again
+                </button>
+              </section>
                   Play Again
                 </button>
               </section>

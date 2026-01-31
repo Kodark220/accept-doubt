@@ -15,7 +15,6 @@ export type RoundHistory = {
 };
 
 export type GameState = {
-  xp: number;
   correct: number;
   correctTrusts: number;
   correctDoubts: number;
@@ -27,7 +26,6 @@ export type GameState = {
 
 export function initialGameState(totalRounds: number): GameState {
   return {
-    xp: 0,
     correct: 0,
     correctTrusts: 0,
     correctDoubts: 0,
@@ -47,7 +45,6 @@ export function recordRound(
 ): GameState {
   const appealUsed = !!appealOutcome;
   const appealSuccess = appealOutcome?.success ?? false;
-  const earnedXp = (playerChoice === consensus.consensus || appealSuccess ? 10 : 0) + (appealSuccess ? 5 : 0);
   const correct = playerChoice === consensus.consensus || appealSuccess;
   const correctTrusts = correct && playerChoice === 'trust' ? 1 : 0;
   const correctDoubts = correct && playerChoice === 'doubt' ? 1 : 0;
@@ -69,7 +66,6 @@ export function recordRound(
 
   return {
     ...state,
-    xp: state.xp + earnedXp,
     correct: state.correct + (correct ? 1 : 0),
     correctTrusts: state.correctTrusts + correctTrusts,
     correctDoubts: state.correctDoubts + correctDoubts,
@@ -86,7 +82,7 @@ export function computeAccuracy(state: GameState): number {
 
 export function leaderboardSnapshot(state: GameState) {
   return {
-    xp: state.xp,
+    score: state.correct * 20,
     accuracy: computeAccuracy(state),
     correctTrusts: state.correctTrusts,
     correctDoubts: state.correctDoubts,
