@@ -101,8 +101,32 @@ export default function GameExperience({
   };
 
   const handleNextClick = () => {
-    // Allow skipping even before voting or countdown ends
-    const finalState = pendingRound ? finalizePendingRound() : null;
+    // Finalize pending round if exists
+    let finalState = pendingRound ? finalizePendingRound() : null;
+    
+    // If no pending round but we're on a question that wasn't voted on, 
+    // record it as skipped (player chose nothing, treat as wrong)
+    if (!finalState && currentScenario && gameState.roundsPlayed < TOTAL_ROUNDS) {
+      // Player skipped this round without voting - still count as a round played
+      const updated = {
+        ...gameState,
+        roundsPlayed: gameState.roundsPlayed + 1,
+        history: [
+          ...gameState.history,
+          {
+            scenario: currentScenario,
+            playerChoice: 'trust' as const,
+            consensus: 'trust' as const,
+            consensusConfidence: 0,
+            correct: false,
+            appeal: undefined
+          }
+        ]
+      };
+      setGameState(updated);
+      finalState = updated;
+    }
+    
     const roundsPlayed = finalState ? finalState.roundsPlayed : gameState.roundsPlayed;
     if (roundsPlayed >= TOTAL_ROUNDS) {
       setReadyForNext(false);
