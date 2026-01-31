@@ -109,16 +109,8 @@ async function callContractWrite(methodName: string, args: any[] = []): Promise<
         interval: 3000,             // Check every 3 seconds
       });
     } catch (waitError: any) {
-      // If not finalized yet, try to get current status
-      console.log(`⚠️ [GenLayer] Transaction not yet finalized, checking status...`);
-      try {
-        receipt = await client.getTransactionByHash(txHash);
-        if (receipt) {
-          console.log(`📊 [GenLayer] Current transaction status:`, receipt);
-        }
-      } catch (e) {
-        // Ignore and throw original error
-      }
+      // If not finalized yet, log and rethrow
+      console.log(`⚠️ [GenLayer] Transaction not yet finalized, may need more time...`);
       throw waitError;
     }
 
