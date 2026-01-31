@@ -27,37 +27,6 @@ type PendingRound = {
   playerChoice: 'trust' | 'doubt';
   consensus: ConsensusResult;
 };
-                            className="w-full rounded-2xl border-2 border-dashed border-white/30 px-6 py-4 text-sm font-semibold tracking-[0.1em] text-white/70 hover:border-genlayer-blue hover:text-genlayer-blue transition"
-                          >
-                            {isConnecting ? '🔄 Connecting...' : '🔗 Connect Wallet to Submit Score'}
-                          </button>
-                          {showWalletOptions && (
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-genlayer-dark border border-white/20 rounded-2xl p-3 space-y-2 z-50 min-w-[220px] shadow-xl">
-                              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Select Wallet</p>
-                              {connectors.map((connector) => (
-                                <button
-                                  key={connector.uid}
-                                  onClick={() => {
-                                    connect({ connector });
-                                    setShowWalletOptions(false);
-                                  }}
-                                  disabled={isConnecting}
-                                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition text-left disabled:opacity-50"
-                                >
-                                  <span className="text-lg">
-                                    {connector.name === 'MetaMask' && '🦊'}
-                                    {connector.name === 'WalletConnect' && '🔗'}
-                                    {connector.name === 'Coinbase Wallet' && '🔵'}
-                                    {connector.name === 'Injected' && '💉'}
-                                    {!['MetaMask', 'WalletConnect', 'Coinbase Wallet', 'Injected'].includes(connector.name) && '👛'}
-                                  </span>
-                                  <span className="text-sm text-white">{connector.name}</span>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
                         <button
                           onClick={handleSubmitScore}
                           disabled={submittingScore}
