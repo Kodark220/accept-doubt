@@ -81,7 +81,7 @@ export default function GameExperience() {
   const currentRoundNumber = 1;
 
   const [activePanel, setActivePanel] = useState<'play'|'history'>('play');
-  const panelOptions = [
+  const panelOptions: { id: 'play' | 'history'; label: string }[] = [
     { id: 'play', label: 'Play' },
     { id: 'history', label: 'History' }
   ];
