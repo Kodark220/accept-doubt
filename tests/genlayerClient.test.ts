@@ -77,6 +77,40 @@ describe('genlayerClient.submitFinalScore & waitForTransactionConfirmation', () 
     expect(waitForTransactionReceipt).toHaveBeenCalled();
   });
 
+  test('contract mode prefers wallet-backed client when available', async () => {
+    process.env.NEXT_PUBLIC_GENLAYER_CONSENSUS = 'contract';
+
+    const writeContract = jest.fn().mockResolvedValue('0xwallettx');
+    const waitForTransactionReceipt = jest.fn().mockResolvedValue({ hash: '0xwallettx', status: 'FINALIZED' });
+
+    // Mock createClient to return a client that has writeContract and waitForTransactionReceipt
+    jest.doMock('genlayer-js', () => ({
+      createClient: () => ({
+        writeContract,
+        waitForTransactionReceipt,
+      }),
+      createAccount: jest.fn(),
+    }), { virtual: true });
+
+    // Simulate browser wallet presence
+    // Provide a basic global.window for the test environment
+    // @ts-ignore
+    global.window = {};
+    // @ts-ignore
+    global.window.ethereum = {};
+
+    const { submitFinalScore } = await import('../utils/genlayerClient');
+
+    const res = await submitFinalScore('0xuser', 'Carol', 60, 3, 5);
+
+    expect(res).toBeDefined();
+    expect(res?.hash).toBe('0xwallettx');
+
+    // Clean up mocked globals
+    // @ts-ignore
+    delete global.window.ethereum;
+  });
+
   test('waitForTransactionConfirmation rejects when waiter fails', async () => {
     process.env.NEXT_PUBLIC_GENLAYER_CONSENSUS = 'contract';
 

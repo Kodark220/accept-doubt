@@ -368,10 +368,27 @@ export async function submitFinalScore(
       confirmed: true
     };
   }
+
+  // Helper: prefer using a wallet-backed client if available (browser + wallet address)
+  function createClientForSubmission(address?: string) {
+    // If in browser and a wallet/address is provided, use that so MetaMask signs the tx
+    if (typeof window !== 'undefined' && address && (window as any).ethereum) {
+      console.log('🔐 Using wallet-backed client for submission (MetaMask)');
+      try {
+        return createClient({ chain: studionet, account: address as `0x${string}` });
+      } catch (e) {
+        console.error('Failed to create wallet-backed GenLayer client, falling back:', e);
+      }
+    }
+
+    // Otherwise, fallback to server/private-key client
+    return getGenLayerClient();
+  }
   
   try {
+    const client = createClientForSubmission(playerWallet);
+
     // Submit the transaction and return immediately with the hash so the UI can poll for confirmation.
-    const client = getGenLayerClient();
     const txHash = (await client.writeContract({
       address: GENLAYER_CONTRACT_ADDRESS as `0x${string}`,
       functionName: 'submit_score',
