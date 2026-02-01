@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
 import GenLayerLogo from '../../components/GenLayerLogo';
+import WalletConnect from '../../components/WalletConnect';
 import ScenarioDisplay from '../../components/ScenarioDisplay';
 import Voting from '../../components/Voting';
 import AppealResolution from '../../components/AppealResolution';
@@ -433,11 +434,10 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
           <p className="text-xs text-white/70 mt-1">{dailyScenario.detail}</p>
         </section>
         
-        {/* Wallet integration temporarily removed */}
+        {/* Wallet connect button */}
         <div className="flex items-center justify-between bg-white/5 rounded-2xl px-4 py-3 relative">
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full bg-gray-500`} />
-            <span className="text-xs text-gray-400">Wallet integration disabled</span>
+            <WalletConnect />
           </div>
           <div className="text-xs text-gray-400">—</div>
         </div>
