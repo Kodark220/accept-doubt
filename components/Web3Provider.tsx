@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { WalletProvider } from '../lib/wallet/WalletProvider';
 
 const queryClient = new QueryClient();
 
@@ -14,7 +15,9 @@ export default function Web3Provider({ children }: Web3ProviderProps) {
   // a React Query client provider for client-only usage.
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <WalletProvider>
+        {children}
+      </WalletProvider>
     </QueryClientProvider>
   );
 }
