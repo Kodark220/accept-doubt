@@ -49,9 +49,12 @@ export default function WalletConnect() {
 
       const eth = (typeof window !== 'undefined' ? (window as any).ethereum : undefined);
 
-      // If this is an injected connector, attempt a direct account request on the
-      // preferred injected provider to force the wallet popup before calling wagmi.connect.
-      if (c?.id === 'injected' && eth) {
+      // If this looks like an injected connector (MetaMask / Injected), attempt
+      // a direct account request on the preferred injected provider to force
+      // the wallet popup before calling wagmi.connect. We broaden the check
+      // to include connectors named like MetaMask because some connectors
+      // expose different ids.
+      if (eth && (c?.id === 'injected' || String(c?.name || '').toLowerCase().includes('meta') || c?.name === 'Injected' || c?.name === 'MetaMask')) {
         try {
           const providers = eth.providers && Array.isArray(eth.providers) ? eth.providers : [eth];
           // Preference order: MetaMask, OKX, any
@@ -64,9 +67,12 @@ export default function WalletConnect() {
             console.log('Temporarily set window.ethereum to preferred provider for pre-request', { name: pref?.provider?.name || pref?.isMetaMask ? 'MetaMask' : pref?.isOkxWallet ? 'OKX' : 'Injected' });
           }
 
-          // Force a direct request for accounts (must be user gesture) — wallet should show popup
+          // Force a direct request for accounts (must be user gesture) — call
+          // the request synchronously in the click handler so the browser
+          // treats it as a user gesture and the wallet shows a popup.
           try {
-            const acc = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
+            const preReq = (window as any).ethereum.request({ method: 'eth_requestAccounts' });
+            const acc = await preReq;
             console.log('Pre-request accounts succeeded', acc);
           } catch (preErr) {
             console.warn('Pre-request accounts failed (may be handled by connect):', preErr);
