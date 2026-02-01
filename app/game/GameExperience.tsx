@@ -22,6 +22,8 @@ import {
   waitForTransactionConfirmation,
   checkTransactionStatus
 } from '../../utils/genlayerClient';
+
+import { toast } from 'sonner';
 import { GameMode, TOTAL_ROUNDS } from './constants';
 
 type PendingRound = {
@@ -187,6 +189,26 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     setPollStartTime(Date.now());
     setPollElapsed(0);
     setPollTimedOut(false);
+
+    // Show a persistent loading toast and resolve it when confirmation arrives or fails
+    const toastId = toast.loading('Submitting to GenLayer — awaiting consensus...');
+    waitForTransactionConfirmation(hash)
+      .then(() => {
+        try { sessionStorage.removeItem('pendingScore'); } catch (e) {}
+        setScoreSubmitted(true);
+        setScorePending(false);
+        setPollTimedOut(false);
+        if (pollTimerRef.current) {
+          window.clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
+        }
+        toast.success('Score confirmed on-chain!', { id: toastId });
+      })
+      .catch((err: any) => {
+        console.error('Toast confirmation failed:', err);
+        setPollTimedOut(true);
+        toast.error('Confirmation failed — check status or retry.', { id: toastId });
+      });
 
     if (pollTimerRef.current) {
       window.clearInterval(pollTimerRef.current);
@@ -644,6 +666,45 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
             appealsWon={leaderboard.appealsWon}
             history={gameState.history}
           />
+        )}
+
+        {/* Confirmation modal overlay when score is pending and not yet confirmed */}
+        {scorePending && !scoreSubmitted && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <div className="bg-genlayer-dark/90 rounded-2xl p-6 w-[90%] max-w-md text-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="h-16 w-16 rounded-full border-4 border-white/10 flex items-center justify-center">
+                  <div className="animate-spin border-4 border-t-transparent border-white/60 rounded-full h-8 w-8" />
+                </div>
+                <h3 className="text-lg font-bold">Waiting for GenLayer Consensus</h3>
+                <p className="text-sm text-gray-400">Your score has been submitted{txHash ? ` (TX: ${txHash.slice(0,8)}...${txHash.slice(-6)})` : ''}. This may take a few minutes.</p>
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={manualCheckStatus}
+                    className="px-4 py-2 rounded-xl bg-white/5"
+                  >
+                    Check status
+                  </button>
+                  {pollTimedOut ? (
+                    <button
+                      onClick={handleSubmitScore}
+                      className="px-4 py-2 rounded-xl bg-genlayer-blue text-white"
+                    >
+                      Retry submission
+                    </button>
+                  ) : (
+                    <button
+                      onClick={stopPolling}
+                      className="px-4 py-2 rounded-xl border border-white/10"
+                    >
+                      Dismiss
+                    </button>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Elapsed: {Math.floor(pollElapsed / 60)}m {pollElapsed % 60}s</p>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </main>

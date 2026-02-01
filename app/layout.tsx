@@ -1,5 +1,6 @@
 import '../styles/globals.css';
 import ClientOnlyWeb3Provider from '../components/ClientOnlyWeb3Provider';
+import ToastProvider from '../components/ToastProvider';
 
 export const metadata = {
   title: 'Trust or Doubt | GenLayer',
@@ -16,6 +17,7 @@ export default function RootLayout({
       <body className="main-gradient">
         <ClientOnlyWeb3Provider>
           <div className="min-h-screen">
+            <ToastProvider />
             {children}
           </div>
         </ClientOnlyWeb3Provider>
