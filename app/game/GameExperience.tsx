@@ -18,7 +18,8 @@ import {
   ConsensusResult,
   AppealOutcome,
   isContractMode,
-  submitFinalScore
+  submitFinalScore,
+  waitForTransactionConfirmation
 } from '../../utils/genlayerClient';
 import { GameMode, TOTAL_ROUNDS } from './constants';
 
@@ -82,14 +83,32 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     setSubmittingScore(true);
     setScorePending(true);
     try {
+      // Submit without waiting for confirmation so UI can remain responsive
       const result = await submitFinalScore(walletAddress, initialUsername, leaderboard.xp, gameState.correct, TOTAL_ROUNDS);
-      if (result?.hash) setTxHash(result.hash);
-      if (result?.confirmed) {
-        setScoreSubmitted(true);
-        setScorePending(false);
-      } else {
-        // Still pending confirmation
-        setScorePending(true);
+      if (!result) throw new Error('No result from submitFinalScore');
+
+      if (result?.hash) {
+        const hash = result.hash as `0x${string}`;
+        setTxHash(hash);
+
+        if (result?.confirmed) {
+          // Immediate confirmation (mock mode or waitForConfirmation used)
+          setScoreSubmitted(true);
+          setScorePending(false);
+        } else {
+          // Start polling in the background for confirmation
+          setScorePending(true);
+          waitForTransactionConfirmation(hash)
+            .then(() => {
+              setScoreSubmitted(true);
+              setScorePending(false);
+            })
+            .catch((err) => {
+              console.error('Transaction confirmation polling failed:', err);
+              // Keep UX simple: clear pending so user can retry submission
+              setScorePending(false);
+            });
+        }
       }
     } catch (err) {
       console.error('Failed to submit score:', err);

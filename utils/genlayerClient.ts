@@ -306,12 +306,38 @@ export async function testContractConnection(): Promise<{ success: boolean; mess
 }
 
 // Submit final score to GenLayer blockchain
+export async function waitForTransactionConfirmation(
+  hash: `0x${string}`,
+  options?: { retries?: number; interval?: number }
+): Promise<any> {
+  console.log(`⏳ [GenLayer] Waiting for transaction confirmation: ${hash}`);
+  const client = getReadOnlyClient();
+  const retries = options?.retries ?? 90; // default retries ~4.5 minutes with 3s interval
+  const interval = options?.interval ?? 3000;
+
+  try {
+    const receipt = await client.waitForTransactionReceipt({
+      hash: hash as any,
+      status: 'FINALIZED' as any,
+      retries,
+      interval,
+    });
+    console.log(`✅ [GenLayer] Transaction ${hash} confirmed`, receipt);
+    return receipt;
+  } catch (err) {
+    console.warn(`⚠️ [GenLayer] Waiting for transaction ${hash} failed or timed out.`, err);
+    throw err;
+  }
+}
+
 export async function submitFinalScore(
   playerWallet: string,
   playerName: string,
   xp: number,
   correctAnswers: number,
-  totalRounds: number
+  totalRounds: number,
+  // When true, submitFinalScore will wait for confirmation before resolving (legacy behavior).
+  waitForConfirmation = false
 ): Promise<{ hash: string; confirmed: boolean } | null> {
   console.log('🏆 [GenLayer] Submitting final score to blockchain...');
   console.log(`   Player: ${playerName} (${playerWallet})`);
@@ -327,23 +353,39 @@ export async function submitFinalScore(
   }
   
   try {
-    const receipt = await callContractWrite('submit_score', [
-      playerWallet,
-      playerName,
-      xp,
-      correctAnswers,
-      totalRounds,
-      Date.now()
-    ]);
-    
-    console.log('✅ [GenLayer] Score submitted successfully!', receipt);
-    return {
-      hash: receipt.hash || receipt.transaction_hash || `0x${Date.now().toString(16)}`,
-      confirmed: true
-    };
+    // Submit the transaction and return immediately with the hash so the UI can poll for confirmation.
+    const client = getGenLayerClient();
+    const txHash = (await client.writeContract({
+      address: GENLAYER_CONTRACT_ADDRESS as `0x${string}`,
+      functionName: 'submit_score',
+      args: [playerWallet, playerName, xp, correctAnswers, totalRounds, Date.now()],
+      value: BigInt(0),
+    })) as `0x${string}`;
+
+    console.log(`⏳ [GenLayer] Transaction submitted: ${txHash}`);
+
+    if (waitForConfirmation) {
+      // Wait for finalization and return confirmed=true
+      try {
+        await client.waitForTransactionReceipt({
+          hash: txHash as any,
+          status: 'FINALIZED' as any,
+          retries: 90,
+          interval: 3000,
+        });
+        console.log(`✅ [GenLayer] Score tx ${txHash} confirmed`);
+        return { hash: txHash, confirmed: true };
+      } catch (err) {
+        console.warn(`⚠️ [GenLayer] Score tx ${txHash} not confirmed within time`, err);
+        return { hash: txHash, confirmed: false };
+      }
+    }
+
+    // By default return immediately and let the caller poll for confirmation
+    return { hash: txHash, confirmed: false };
   } catch (error: any) {
     console.error('❌ [GenLayer] Failed to submit score:', error);
-    // Return mock result on failure so UX isn't broken
+    // Return mock fallback so UX isn't broken
     return {
       hash: `0x${Date.now().toString(16)}fallback`,
       confirmed: false
