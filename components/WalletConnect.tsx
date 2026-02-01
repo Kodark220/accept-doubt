@@ -47,24 +47,32 @@ export default function WalletConnect() {
     try {
       console.log('Attempting connect with', { id: c.id, name: c.name, ready: c.ready });
 
-      // If the injected connector is chosen and multiple providers are injected
-      // (MetaMask + OKX etc.), temporarily set window.ethereum to the preferred
-      // provider so the connector targets the right extension. We restore it
-      // afterwards to avoid side effects.
       const eth = (typeof window !== 'undefined' ? (window as any).ethereum : undefined);
-      if (eth && eth.providers && Array.isArray(eth.providers) && eth.providers.length) {
-        // Preference: MetaMask first, then OKX, then first provider
-        const pref = (c.name || '').toLowerCase().includes('metamask')
-          ? eth.providers.find((p: any) => p.isMetaMask) || eth.providers[0]
-          : (c.name || '').toLowerCase().includes('okx')
-          ? eth.providers.find((p: any) => p.isOkxWallet) || eth.providers[0]
-          : eth.providers.find((p: any) => p.isMetaMask) || eth.providers.find((p: any) => p.isOkxWallet) || eth.providers[0];
 
-        if (pref && pref !== eth) {
-          originalEth = eth;
-          (window as any).ethereum = pref;
-          patched = true;
-          console.log('Temporarily set window.ethereum to preferred provider', { name: pref?.provider?.name || pref?.isMetaMask ? 'MetaMask' : pref?.isOkxWallet ? 'OKX' : 'Injected' });
+      // If this is an injected connector, attempt a direct account request on the
+      // preferred injected provider to force the wallet popup before calling wagmi.connect.
+      if (c?.id === 'injected' && eth) {
+        try {
+          const providers = eth.providers && Array.isArray(eth.providers) ? eth.providers : [eth];
+          // Preference order: MetaMask, OKX, any
+          const pref = providers.find((p: any) => p.isMetaMask) || providers.find((p: any) => p.isOkxWallet) || providers[0];
+
+          if (pref && pref !== eth) {
+            originalEth = eth;
+            (window as any).ethereum = pref;
+            patched = true;
+            console.log('Temporarily set window.ethereum to preferred provider for pre-request', { name: pref?.provider?.name || pref?.isMetaMask ? 'MetaMask' : pref?.isOkxWallet ? 'OKX' : 'Injected' });
+          }
+
+          // Force a direct request for accounts (must be user gesture) — wallet should show popup
+          try {
+            const acc = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
+            console.log('Pre-request accounts succeeded', acc);
+          } catch (preErr) {
+            console.warn('Pre-request accounts failed (may be handled by connect):', preErr);
+          }
+        } catch (innerErr) {
+          console.warn('Injected pre-request setup failed:', innerErr);
         }
       }
 
