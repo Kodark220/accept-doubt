@@ -19,7 +19,8 @@ import {
   AppealOutcome,
   isContractMode,
   submitFinalScore,
-  waitForTransactionConfirmation
+  waitForTransactionConfirmation,
+  checkTransactionStatus
 } from '../../utils/genlayerClient';
 import { GameMode, TOTAL_ROUNDS } from './constants';
 
@@ -72,6 +73,14 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
   const [gameOver, setGameOver] = useState(false);
   const [readyForNext, setReadyForNext] = useState(false);
 
+  // Poll / timeout UI states for pending confirmations
+  const [pollStartTime, setPollStartTime] = useState<number | null>(null);
+  const [pollElapsed, setPollElapsed] = useState<number>(0);
+  const [pollTimedOut, setPollTimedOut] = useState<boolean>(false);
+  const pollTimerRef = useRef<number | null>(null);
+  const POLL_INTERVAL = 5000; // ms
+  const MAX_POLL_SECONDS = 10 * 60; // 10 minutes
+
   const [gameState, setGameState] = useState(initialGameState(TOTAL_ROUNDS));
 
   const leaderboard = leaderboardSnapshot(gameState);
@@ -96,18 +105,9 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
           setScoreSubmitted(true);
           setScorePending(false);
         } else {
-          // Start polling in the background for confirmation
+          // Start resumable polling in the background for confirmation
           setScorePending(true);
-          waitForTransactionConfirmation(hash)
-            .then(() => {
-              setScoreSubmitted(true);
-              setScorePending(false);
-            })
-            .catch((err) => {
-              console.error('Transaction confirmation polling failed:', err);
-              // Keep UX simple: clear pending so user can retry submission
-              setScorePending(false);
-            });
+          startPollingForConfirmation(hash);
         }
       }
     } catch (err) {
@@ -179,10 +179,112 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
   ];
 
   // No-op handlers used by UI
+  const startPollingForConfirmation = (hash: `0x${string}`) => {
+    try {
+      sessionStorage.setItem('pendingScore', JSON.stringify({ hash, username: initialUsername, xp: leaderboard.xp, ts: Date.now() }));
+    } catch (e) {}
+
+    setPollStartTime(Date.now());
+    setPollElapsed(0);
+    setPollTimedOut(false);
+
+    if (pollTimerRef.current) {
+      window.clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+
+    pollTimerRef.current = window.setInterval(async () => {
+      setPollElapsed((prev) => {
+        const next = prev + Math.floor(POLL_INTERVAL / 1000);
+        if (next >= MAX_POLL_SECONDS) {
+          setPollTimedOut(true);
+          if (pollTimerRef.current) {
+            window.clearInterval(pollTimerRef.current);
+            pollTimerRef.current = null;
+          }
+        }
+        return next;
+      });
+
+      try {
+        const receipt = await checkTransactionStatus(hash);
+        if (receipt) {
+          setScoreSubmitted(true);
+          setScorePending(false);
+          setPollTimedOut(false);
+          try { sessionStorage.removeItem('pendingScore'); } catch (e) {}
+          if (pollTimerRef.current) {
+            window.clearInterval(pollTimerRef.current);
+            pollTimerRef.current = null;
+          }
+        }
+      } catch (err) {
+        console.error('Error while polling tx status:', err);
+      }
+    }, POLL_INTERVAL);
+  };
+
+  const stopPolling = () => {
+    if (pollTimerRef.current) {
+      window.clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
+    }
+    setPollTimedOut(false);
+    setPollElapsed(0);
+    setPollStartTime(null);
+  };
+
   const handleSubmitScoreSafe = async () => {
     setSubmittingScore(true);
     await handleSubmitScore();
     setSubmittingScore(false);
+  };
+
+  useEffect(() => {
+    // On mount, resume any pending score submission stored in sessionStorage
+    try {
+      const raw = sessionStorage.getItem('pendingScore');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.hash && !scoreSubmitted) {
+          const hash = parsed.hash as `0x${string}`;
+          setTxHash(hash);
+          setScorePending(true);
+          startPollingForConfirmation(hash);
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (pollTimerRef.current) {
+        window.clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  const manualCheckStatus = async () => {
+    if (!txHash) return;
+    try {
+      const receipt = await checkTransactionStatus(txHash as `0x${string}`);
+      if (receipt) {
+        setScoreSubmitted(true);
+        setScorePending(false);
+        try { sessionStorage.removeItem('pendingScore'); } catch (e) {}
+        if (pollTimerRef.current) {
+          window.clearInterval(pollTimerRef.current);
+          pollTimerRef.current = null;
+        }
+      } else {
+        // still pending
+        setPollTimedOut(true);
+      }
+    } catch (err) {
+      console.error('Manual status check failed:', err);
+    }
   };
 
   return (
@@ -304,7 +406,30 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                     <div className="text-6xl font-bold text-genlayer-blue">— / 100</div>
                     <div className="mt-2 text-sm text-gray-400">
                       {scorePending ? (
-                        <span>Score submitted — waiting for blockchain confirmation{txHash && ` (TX: ${txHash})`}.</span>
+                        <div>
+                          <p>
+                            Score submitted — waiting for blockchain confirmation{txHash && ` (TX: ${txHash})`}.
+                          </p>
+                          <p className="text-xs text-gray-400 mt-2">
+                            {pollElapsed > 0 ? `Waiting ${Math.floor(pollElapsed/60)}m ${pollElapsed%60}s` : ''}
+                          </p>
+                          <div className="mt-3 flex gap-3">
+                            <button
+                              onClick={manualCheckStatus}
+                              className="px-3 py-2 rounded-xl bg-white/5 text-sm"
+                            >
+                              Check status now
+                            </button>
+                            {pollTimedOut ? (
+                              <button
+                                onClick={handleSubmitScore}
+                                className="px-3 py-2 rounded-xl bg-genlayer-blue text-sm text-white"
+                              >
+                                Retry submission
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
                       ) : (
                         <span>Score will be revealed after you submit it to GenLayer.</span>
                       )}

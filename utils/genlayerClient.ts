@@ -330,6 +330,23 @@ export async function waitForTransactionConfirmation(
   }
 }
 
+export async function checkTransactionStatus(hash: `0x${string}`): Promise<any | null> {
+  // Perform a single, non-blocking check for a transaction receipt
+  const client = getReadOnlyClient();
+  try {
+    const receipt = await client.waitForTransactionReceipt({
+      hash: hash as any,
+      status: 'FINALIZED' as any,
+      retries: 1,
+      interval: 1000,
+    });
+    return receipt;
+  } catch (err) {
+    // If no receipt yet or timed out for single try, return null
+    return null;
+  }
+}
+
 export async function submitFinalScore(
   playerWallet: string,
   playerName: string,

@@ -52,7 +52,7 @@ describe('genlayerClient.submitFinalScore & waitForTransactionConfirmation', () 
       studionet: {},
     }));
 
-    const { submitFinalScore, waitForTransactionConfirmation } = await import('../utils/genlayerClient');
+    const { submitFinalScore, waitForTransactionConfirmation, checkTransactionStatus } = await import('../utils/genlayerClient');
 
     const res = await submitFinalScore('0xabc', 'Bob', 100, 5, 5);
 
@@ -62,6 +62,10 @@ describe('genlayerClient.submitFinalScore & waitForTransactionConfirmation', () 
 
     const receipt = await waitForTransactionConfirmation('0xdeadbeef');
     expect(receipt).toEqual(fakeReceipt);
+
+    // checkTransactionStatus (single check) should also return the receipt
+    const single = await checkTransactionStatus('0xdeadbeef');
+    expect(single).toEqual(fakeReceipt);
 
     // Now test waitForConfirmation=true for submitFinalScore
     const res2 = await submitFinalScore('0xabc', 'Bob', 100, 5, 5, true);
