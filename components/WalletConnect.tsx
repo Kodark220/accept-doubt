@@ -1,17 +1,25 @@
-import React from 'react';
+"use client";
 
-// Wallet UI removed — component is a no-op placeholder.
+import React from "react";
+import { useWallet } from "../lib/wallet/WalletProvider";
+
 export default function WalletConnect() {
-  return null;
-}
+  const { address, isConnected, isLoading, connectWallet, disconnectWallet } = useWallet();
 
-// Minimal useWallet stub to avoid breaking imports elsewhere.
-export function useWallet() {
-  return {
-    address: null,
-    isConnected: false,
-    connectorName: null,
-    disconnect: async () => {},
-    shortAddress: null,
-  };
+  return (
+    <div>
+      {!isConnected ? (
+        <button onClick={() => connectWallet()} disabled={isLoading} className="btn-plain">
+          {isLoading ? "Connecting..." : "Connect Wallet"}
+        </button>
+      ) : (
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-sm">{address}</span>
+          <button onClick={() => disconnectWallet()} className="btn-plain text-red-500">
+            Disconnect
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
