@@ -309,6 +309,133 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     }
   };
 
+  const confirmedScorePanel = (
+    <div>
+      <div className="bg-green-500/10 border-2 border-green-500/50 rounded-2xl p-6 space-y-4">
+        <p className="text-xs uppercase tracking-[0.5em] text-green-400">✅ Blockchain Confirmed</p>
+        <h2 className="text-3xl font-bold text-white">Score on GenLayer</h2>
+        <div className="text-7xl font-bold text-green-400">{score} / 100</div>
+        <div className="text-lg text-white/80">
+          <span className="font-semibold">{initialUsername}</span> • {leaderboard.accuracy}% Accuracy
+        </div>
+        {txHash && (
+          <p className="text-xs text-gray-400 break-all pt-2 border-t border-white/10">TX: {txHash}</p>
+        )}
+        <div className="mt-6 space-y-3">
+          <h3 className="text-sm text-gray-300 uppercase tracking-[0.3em]">Round breakdown</h3>
+          <div className="grid gap-2">
+            {gameState.history.map((h, idx) => (
+              <div key={idx} className="flex items-center justify-between bg-white/5 rounded-xl p-3">
+                <div className="flex-1">
+                  <p className="text-sm font-semibold truncate">{h.scenario.text}</p>
+                  <p className="text-xs text-gray-400 mt-1">You: {h.playerChoice} • Consensus: {h.consensus} • Confidence: {Math.round(h.consensusConfidence*100)}%</p>
+                </div>
+                <div className="ml-4">{h.correct ? <span className="text-green-400 font-bold">Correct</span> : <span className="text-red-400 font-bold">Wrong</span>}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 text-left mt-6">
+        <div className="bg-white/5 rounded-xl p-4">
+          <p className="text-xs text-gray-400 uppercase">Accuracy</p>
+          <p className="text-2xl font-bold text-white">{leaderboard.accuracy}%</p>
+        </div>
+        <div className="bg-white/5 rounded-xl p-4">
+          <p className="text-xs text-gray-400 uppercase">Correct</p>
+          <p className="text-2xl font-bold text-white">{gameState.correct}/{TOTAL_ROUNDS}</p>
+        </div>
+        <div className="bg-white/5 rounded-xl p-4">
+          <p className="text-xs text-gray-400 uppercase">Player</p>
+          <p className="text-xl font-bold text-white truncate">{initialUsername}</p>
+        </div>
+        <div className="bg-white/5 rounded-xl p-4">
+          <p className="text-xs text-gray-400 uppercase">Appeals Won</p>
+          <p className="text-2xl font-bold text-white">{gameState.appealsWon}</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const unconfirmedScorePanel = (
+    <div>
+      <p className="text-xs uppercase tracking-[0.5em] text-genlayer-accent">🎉 Game Complete!</p>
+      <h2 className="text-4xl font-bold text-white">Final Score</h2>
+      <div className="text-6xl font-bold text-genlayer-blue">— / 100</div>
+      <div className="mt-2 text-sm text-gray-400">
+        {scorePending ? (
+          <div>
+            <p>Score submitted — waiting for blockchain confirmation{txHash && ` (TX: ${txHash})`}.</p>
+            <p className="text-xs text-gray-400 mt-2">{pollElapsed > 0 ? `Waiting ${Math.floor(pollElapsed/60)}m ${pollElapsed%60}s` : ''}</p>
+            <div className="mt-3 flex gap-3">
+              <button onClick={manualCheckStatus} className="px-3 py-2 rounded-xl bg-white/5 text-sm">Check status now</button>
+              {pollTimedOut && <button onClick={handleSubmitScore} className="px-3 py-2 rounded-xl bg-genlayer-blue text-sm text-white">Retry submission</button>}
+            </div>
+          </div>
+        ) : (
+          <span>Score will be revealed after you submit it to GenLayer.</span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 text-left mt-6">
+        <div className="bg-white/5 rounded-xl p-4">
+          <p className="text-xs text-gray-400 uppercase">Accuracy</p>
+          <p className="text-2xl font-bold text-white">{leaderboard.accuracy}%</p>
+        </div>
+        <div className="bg-white/5 rounded-xl p-4">
+          <p className="text-xs text-gray-400 uppercase">Correct</p>
+          <p className="text-2xl font-bold text-white">{gameState.correct}/{TOTAL_ROUNDS}</p>
+        </div>
+        <div className="bg-white/5 rounded-xl p-4">
+          <p className="text-xs text-gray-400 uppercase">Player</p>
+          <p className="text-xl font-bold text-white truncate">{initialUsername}</p>
+        </div>
+        <div className="bg-white/5 rounded-xl p-4">
+          <p className="text-xs text-gray-400 uppercase">Appeals Won</p>
+          <p className="text-2xl font-bold text-white">{gameState.appealsWon}</p>
+        </div>
+      </div>
+
+      {/* Submit Score to Blockchain */}
+      <div className="border-t border-white/10 pt-6 space-y-3">
+        <p className="text-xs uppercase tracking-[0.3em] text-gray-400">Submit to GenLayer Blockchain</p>
+        {!isConnected ? (
+          <div className="relative">
+            <button onClick={() => setShowWalletOptions(!showWalletOptions)} disabled={isConnecting} className="w-full rounded-2xl border-2 border-dashed border-white/30 px-6 py-4 text-sm font-semibold tracking-[0.1em] text-white/70 hover:border-genlayer-blue hover:text-genlayer-blue transition">{isConnecting ? '🔄 Connecting...' : '🔗 Connect Wallet to Submit Score'}</button>
+            {showWalletOptions && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-genlayer-dark border border-white/20 rounded-2xl p-3 space-y-2 z-50 min-w-[220px] shadow-xl">
+                <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Select Wallet</p>
+                {connectors.map((connector) => (
+                  <button key={connector.uid} onClick={() => { connect({ connector }); setShowWalletOptions(false); }} disabled={isConnecting} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition text-left disabled:opacity-50">
+                    <span className="text-lg">{connector.name === 'MetaMask' && '🦊'}{connector.name === 'WalletConnect' && '🔗'}{connector.name === 'Coinbase Wallet' && '🔵'}{connector.name === 'Injected' && '💉'}{!['MetaMask', 'WalletConnect', 'Coinbase Wallet', 'Injected'].includes(connector.name) && '👛'}</span>
+                    <span className="text-sm text-white">{connector.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <button onClick={handleSubmitScore} disabled={submittingScore || scorePending} className="w-full rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-base font-semibold tracking-[0.2em] text-white disabled:opacity-50">{submittingScore ? '⏳ Submitting to GenLayer...' : scorePending ? '⏳ Pending confirmation...' : '📝 Sign & Submit Score'}</button>
+        )}
+      </div>
+
+      <div className="mt-6 space-y-3">
+        <h3 className="text-sm text-gray-300 uppercase tracking-[0.3em]">Round breakdown</h3>
+        <div className="grid gap-2">
+          {gameState.history.map((h, idx) => (
+            <div key={idx} className="flex items-center justify-between bg-white/5 rounded-xl p-3">
+              <div className="flex-1">
+                <p className="text-sm font-semibold truncate">{h.scenario.text}</p>
+                <p className="text-xs text-gray-400 mt-1">You: {h.playerChoice} • Consensus: {h.consensus} • Confidence: {Math.round(h.consensusConfidence*100)}%</p>
+              </div>
+              <div className="ml-4">{h.correct ? <span className="text-green-400 font-bold">Correct</span> : <span className="text-red-400 font-bold">Wrong</span>}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <main className="min-h-screen px-4 py-8 md:px-8">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -403,131 +530,8 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
             {gameOver ? (
               // GAME OVER - Show final score prominently
               <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-6">
-                {scoreSubmitted ? (
-                  // CONFIRMED SCORE - Show only the blockchain-confirmed score
-                  <>
-                    <div className="bg-green-500/10 border-2 border-green-500/50 rounded-2xl p-6 space-y-4">
-                      <p className="text-xs uppercase tracking-[0.5em] text-green-400">✅ Blockchain Confirmed</p>
-                      <h2 className="text-3xl font-bold text-white">Score on GenLayer</h2>
-                      <div className="text-7xl font-bold text-green-400">{score} / 100</div>
-                      <div className="text-lg text-white/80">
-                        <span className="font-semibold">{initialUsername}</span> • {leaderboard.accuracy}% Accuracy
-                      </div>
-                      {txHash && (
-                        <p className="text-xs text-gray-400 break-all pt-2 border-t border-white/10">
-                          TX: {txHash}
-                        </p>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  // UNCONFIRMED - Hide numeric score until confirmed on-chain
-                  <>
-                    <p className="text-xs uppercase tracking-[0.5em] text-genlayer-accent">🎉 Game Complete!</p>
-                    <h2 className="text-4xl font-bold text-white">Final Score</h2>
-                    <div className="text-6xl font-bold text-genlayer-blue">— / 100</div>
-                    <div className="mt-2 text-sm text-gray-400">
-                      {scorePending ? (
-                        <div>
-                          <p>
-                            Score submitted — waiting for blockchain confirmation{txHash && ` (TX: ${txHash})`}.
-                          </p>
-                          <p className="text-xs text-gray-400 mt-2">
-                            {pollElapsed > 0 ? `Waiting ${Math.floor(pollElapsed/60)}m ${pollElapsed%60}s` : ''}
-                          </p>
-                          <div className="mt-3 flex gap-3">
-                            <button
-                              onClick={manualCheckStatus}
-                              className="px-3 py-2 rounded-xl bg-white/5 text-sm"
-                            >
-                              Check status now
-                            </button>
-                            {pollTimedOut ? (
-                              <button
-                                onClick={handleSubmitScore}
-                                className="px-3 py-2 rounded-xl bg-genlayer-blue text-sm text-white"
-                              >
-                                Retry submission
-                              </button>
-                            ) : null}
-                          </div>
-                        </div>
-                      ) : (
-                        <span>Score will be revealed after you submit it to GenLayer.</span>
-                      )}
-                    </div>
+                {scoreSubmitted ? confirmedScorePanel : unconfirmedScorePanel}
 
-                    <div className="grid grid-cols-2 gap-4 text-left mt-6">
-                      <div className="bg-white/5 rounded-xl p-4">
-                        <p className="text-xs text-gray-400 uppercase">Accuracy</p>
-                        <p className="text-2xl font-bold text-white">{leaderboard.accuracy}%</p>
-                      </div>
-                      <div className="bg-white/5 rounded-xl p-4">
-                        <p className="text-xs text-gray-400 uppercase">Correct</p>
-                        <p className="text-2xl font-bold text-white">{gameState.correct}/{TOTAL_ROUNDS}</p>
-                      </div>
-                      <div className="bg-white/5 rounded-xl p-4">
-                        <p className="text-xs text-gray-400 uppercase">Player</p>
-                        <p className="text-xl font-bold text-white truncate">{initialUsername}</p>
-                      </div>
-                      <div className="bg-white/5 rounded-xl p-4">
-                        <p className="text-xs text-gray-400 uppercase">Appeals Won</p>
-                        <p className="text-2xl font-bold text-white">{gameState.appealsWon}</p>
-                      </div>
-                    </div>
-
-                    {/* Submit Score to Blockchain */}
-                    <div className="border-t border-white/10 pt-6 space-y-3">
-                      <p className="text-xs uppercase tracking-[0.3em] text-gray-400">
-                        Submit to GenLayer Blockchain
-                      </p>
-                      {!isConnected ? (
-                        <div className="relative">
-                          <button
-                            onClick={() => setShowWalletOptions(!showWalletOptions)}
-                            disabled={isConnecting}
-                            className="w-full rounded-2xl border-2 border-dashed border-white/30 px-6 py-4 text-sm font-semibold tracking-[0.1em] text-white/70 hover:border-genlayer-blue hover:text-genlayer-blue transition"
-                          >
-                            {isConnecting ? '🔄 Connecting...' : '🔗 Connect Wallet to Submit Score'}
-                          </button>
-                          {showWalletOptions && (
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-genlayer-dark border border-white/20 rounded-2xl p-3 space-y-2 z-50 min-w-[220px] shadow-xl">
-                              <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Select Wallet</p>
-                              {connectors.map((connector) => (
-                                <button
-                                  key={connector.uid}
-                                  onClick={() => {
-                                    connect({ connector });
-                                    setShowWalletOptions(false);
-                                  }}
-                                  disabled={isConnecting}
-                                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition text-left disabled:opacity-50"
-                                >
-                                  <span className="text-lg">
-                                    {connector.name === 'MetaMask' && '🦊'}
-                                    {connector.name === 'WalletConnect' && '🔗'}
-                                    {connector.name === 'Coinbase Wallet' && '🔵'}
-                                    {connector.name === 'Injected' && '💉'}
-                                    {!['MetaMask', 'WalletConnect', 'Coinbase Wallet', 'Injected'].includes(connector.name) && '👛'}
-                                  </span>
-                                  <span className="text-sm text-white">{connector.name}</span>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <button
-                          onClick={handleSubmitScore}
-                          disabled={submittingScore || scorePending}
-                          className="w-full rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-base font-semibold tracking-[0.2em] text-white disabled:opacity-50"
-                        >
-                          {submittingScore ? '⏳ Submitting to GenLayer...' : scorePending ? '⏳ Pending confirmation...' : '📝 Sign & Submit Score'}
-                        </button>
-                      )}
-                    </div>
-                  </>
-                )}
                 <button
                   onClick={restartGame}
                   className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
@@ -567,18 +571,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                     onAppeal={requestAppeal}
                   />
                 )}
-                <RoundResults
-                  lastRound={lastRound}
-                  pending={
-                    pendingRound
-                      ? {
-                          consensus: pendingRound.consensus.consensus,
-                          confidence: pendingRound.consensus.confidence,
-                          playerChoice: pendingRound.playerChoice
-                        }
-                      : undefined
-                  }
-                />
+                {/* Round results are hidden during play. All round outcomes are revealed together at the end of the game. */}
                 <div className="flex gap-3">
                   <button
                     onClick={handleNextClick}
