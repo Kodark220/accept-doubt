@@ -13,6 +13,7 @@ export default function WalletConnect() {
   const { connect, connectors, isPending, error } = useConnect();
   const { disconnect } = useDisconnect();
   const [showOptions, setShowOptions] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   if (isConnected && address) {
     return (
@@ -38,6 +39,21 @@ export default function WalletConnect() {
     );
   }
 
+  const handleConnectorClick = async (c: any) => {
+    setLastError(null);
+    try {
+      console.log('Attempting connect with', { id: c.id, name: c.name, ready: c.ready });
+      await connect({ connector: c });
+      console.log('connect returned');
+      setShowOptions(false);
+    } catch (e: any) {
+      console.error('connect failed', e);
+      setLastError(e?.message || String(e));
+    }
+  };
+
+  const showDebug = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('debugWallet') === '1';
+
   return (
     <div className="relative">
       <button
@@ -54,10 +70,7 @@ export default function WalletConnect() {
           {connectors.map((connector) => (
             <button
               key={connector.uid}
-              onClick={() => {
-                connect({ connector });
-                setShowOptions(false);
-              }}
+              onClick={() => handleConnectorClick(connector)}
               disabled={isPending}
               className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition text-left disabled:opacity-50"
             >
@@ -73,6 +86,52 @@ export default function WalletConnect() {
           ))}
           {error && (
             <p className="text-xs text-red-400 mt-2">{error.message}</p>
+          )}
+          {lastError && (
+            <p className="text-xs text-red-400 mt-2">Connector error: {lastError}</p>
+          )}
+
+          {showDebug && (
+            <div className="mt-2 text-xs text-gray-300">
+              <strong>Debug</strong>
+              <pre className="text-[12px] mt-1 max-h-40 overflow-auto">{JSON.stringify(connectors.map((c: any) => ({ id: c.id, name: c.name, ready: c.ready, uid: c.uid })), null, 2)}</pre>
+              <pre className="text-[12px] mt-1">Injected: {JSON.stringify((window as any).ethereum ? { isMetaMask: (window as any).ethereum.isMetaMask, isOkxWallet: (window as any).ethereum.isOkxWallet, providers: (window as any).ethereum.providers ? (window as any).ethereum.providers.map((p: any) => ({ isMetaMask: p.isMetaMask, isOkxWallet: p.isOkxWallet, name: p?.provider?.name || 'unknown' })) : null } : 'none', null, 2)}</pre>              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={async () => {
+                    const eth = (window as any).ethereum;
+                    if (!eth) return alert('No injected ethereum provider detected');
+                    if (eth.providers && Array.isArray(eth.providers) && eth.providers.length) {
+                      for (const p of eth.providers) {
+                        try {
+                          const acc = await p.request({ method: 'eth_requestAccounts' });
+                          console.log('provider responded', p, acc);
+                          alert(`Provider responded: ${acc}`);
+                          return;
+                        } catch (err) {
+                          console.warn('provider request failed', err);
+                        }
+                      }
+                      alert('No injected provider responded to account request.');
+                      return;
+                    }
+                    try {
+                      const acc = await eth.request({ method: 'eth_requestAccounts' });
+                      alert('Accounts: ' + (acc || []).join(','));
+                    } catch (err:any) {
+                      alert('Error: ' + (err?.message || String(err)));
+                    }
+                  }}
+                  className="px-2 py-1 rounded bg-white/5"
+                >
+                  Request Accounts (injected)
+                </button>
+                <button
+                  onClick={() => console.log('connectors', connectors)}
+                  className="px-2 py-1 rounded bg-white/5"
+                >
+                  Log connectors
+                </button>
+              </div>            </div>
           )}
         </div>
       )}
