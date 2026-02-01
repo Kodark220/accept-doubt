@@ -54,16 +54,21 @@ export default function LandingPage() {
             The trust infrastructure for AI-driven decisions.
           </h1>
           <form className="space-y-4" onSubmit={handleStart}>
-            <label className="block text-sm uppercase tracking-[0.3em] text-white/60">Username</label>
+            <label htmlFor="username" className="block text-sm uppercase tracking-[0.3em] text-white/60">Username</label>
             <div>
               <input
+                id="username"
+                name="username"
                 type="text"
                 value={username}
                 placeholder="Enter your username"
+                autoComplete="username"
+                required
                 onChange={(event) => setUsername(event.target.value)}
                 className="w-full rounded-2xl border border-white/30 bg-black/30 px-4 py-3 text-white placeholder:text-white/40 focus:border-genlayer-blue focus:outline-none"
+                aria-describedby={errorMessage ? 'username-error' : undefined}
               />
-              {errorMessage && <p className="mt-2 text-xs text-genlayer-accent">{errorMessage}</p>}
+              {errorMessage && <p id="username-error" role="alert" className="mt-2 text-xs text-genlayer-accent">{errorMessage}</p>}
             </div>
             <div className="flex gap-4">
               <button
