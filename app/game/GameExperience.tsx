@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
 import GenLayerLogo from '../../components/GenLayerLogo';
 import ScenarioDisplay from '../../components/ScenarioDisplay';
 import Voting from '../../components/Voting';
@@ -33,28 +32,17 @@ type PendingRound = {
 };
 
 export default function GameExperience({ initialMode, initialUsername, initialQueue, dailyScenario }: { initialMode: GameMode; initialUsername: string; initialQueue: ScenarioClaim[]; dailyScenario: ScenarioClaim }) {
-  // Minimal state & stubs to satisfy TypeScript and allow builds
-  const { address } = useAccount();
-  const accountIsConnected = Boolean(address);
-  const connectHook = useConnect();
-  const disconnectHook = useDisconnect();
-
+  // Wallet integration removed temporarily — simplified placeholders
   const modeLabel = initialMode === 'single' ? 'Single player' : 'Multiplayer';
   const contractMode = isContractMode();
 
-  const isConnected = accountIsConnected;
-  const walletAddress = address ?? '';
-  const activeConnector = (connectHook && (connectHook as any).activeConnector) || undefined;
-  const connectors = (connectHook && (connectHook as any).connectors) || [];
+  const isConnected = false;
+  const walletAddress = '';
+  const activeConnector = undefined;
+  const connectors: any[] = [];
   const isConnecting = false;
-  const connect = (connector?: any) => {
-    if (connectHook && (connectHook as any).connect) {
-      (connectHook as any).connect({ connector });
-    }
-  };
-  const disconnect = () => {
-    if (disconnectHook && (disconnectHook as any).disconnect) (disconnectHook as any).disconnect();
-  };
+  const connect = (_connector?: any) => {};
+  const disconnect = () => {};
 
   const [showWalletOptions, setShowWalletOptions] = useState(false);
   const [scenarioQueue, setScenarioQueue] = useState<ScenarioClaim[]>(
@@ -399,24 +387,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
       {/* Submit Score to Blockchain */}
       <div className="border-t border-white/10 pt-6 space-y-3">
         <p className="text-xs uppercase tracking-[0.3em] text-gray-400">Submit to GenLayer Blockchain</p>
-        {!isConnected ? (
-          <div className="relative">
-            <button onClick={() => setShowWalletOptions(!showWalletOptions)} disabled={isConnecting} className="w-full rounded-2xl border-2 border-dashed border-white/30 px-6 py-4 text-sm font-semibold tracking-[0.1em] text-white/70 hover:border-genlayer-blue hover:text-genlayer-blue transition">{isConnecting ? '🔄 Connecting...' : '🔗 Connect Wallet to Submit Score'}</button>
-            {showWalletOptions && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-genlayer-dark border border-white/20 rounded-2xl p-3 space-y-2 z-50 min-w-[220px] shadow-xl">
-                <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Select Wallet</p>
-                {connectors.map((connector) => (
-                  <button key={connector.uid} onClick={() => { connect({ connector }); setShowWalletOptions(false); }} disabled={isConnecting} className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition text-left disabled:opacity-50">
-                    <span className="text-lg">{connector.name === 'MetaMask' && '🦊'}{connector.name === 'WalletConnect' && '🔗'}{connector.name === 'Coinbase Wallet' && '🔵'}{connector.name === 'Injected' && '💉'}{!['MetaMask', 'WalletConnect', 'Coinbase Wallet', 'Injected'].includes(connector.name) && '👛'}</span>
-                    <span className="text-sm text-white">{connector.name}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <button onClick={handleSubmitScore} disabled={submittingScore || scorePending} className="w-full rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 text-base font-semibold tracking-[0.2em] text-white disabled:opacity-50">{submittingScore ? '⏳ Submitting to GenLayer...' : scorePending ? '⏳ Pending confirmation...' : '📝 Sign & Submit Score'}</button>
-        )}
+        <div className="w-full rounded-2xl border-2 border-dashed border-white/30 px-6 py-4 text-sm font-semibold tracking-[0.1em] text-white/70 bg-white/5">Wallet integration disabled — submission unavailable</div>
       </div>
 
       <div className="mt-6 space-y-3">
@@ -462,67 +433,13 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
           <p className="text-xs text-white/70 mt-1">{dailyScenario.detail}</p>
         </section>
         
-        {/* Wallet Connection Bar - Multi-wallet support */}
+        {/* Wallet integration temporarily removed */}
         <div className="flex items-center justify-between bg-white/5 rounded-2xl px-4 py-3 relative">
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-gray-500'}`} />
-            <span className="text-xs text-gray-400">
-              {isConnected && walletAddress
-                ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
-                : 'No wallet connected'
-              }
-            </span>
-            {activeConnector && (
-              <span className="text-[10px] text-gray-500 uppercase px-2 py-0.5 bg-white/5 rounded">
-                {activeConnector.name}
-              </span>
-            )}
+            <div className={`w-2 h-2 rounded-full bg-gray-500`} />
+            <span className="text-xs text-gray-400">Wallet integration disabled</span>
           </div>
-          
-          {isConnected ? (
-            <button
-              onClick={() => disconnect()}
-              className="px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"
-            >
-              Disconnect
-            </button>
-          ) : (
-            <div className="relative">
-              <button
-                onClick={() => setShowWalletOptions(!showWalletOptions)}
-                disabled={isConnecting}
-                className="px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider bg-genlayer-blue/20 text-genlayer-blue hover:bg-genlayer-blue/30 transition disabled:opacity-50"
-              >
-                {isConnecting ? '🔄 Connecting...' : '🔗 Connect Wallet'}
-              </button>
-              
-              {showWalletOptions && (
-                <div className="absolute top-full right-0 mt-2 bg-genlayer-dark border border-white/20 rounded-2xl p-3 space-y-2 z-50 min-w-[220px] shadow-xl">
-                  <p className="text-xs text-gray-400 uppercase tracking-wider mb-2">Select Wallet</p>
-                  {connectors.map((connector) => (
-                    <button
-                      key={connector.uid}
-                      onClick={() => {
-                        connect({ connector });
-                        setShowWalletOptions(false);
-                      }}
-                      disabled={isConnecting}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition text-left disabled:opacity-50"
-                    >
-                      <span className="text-lg">
-                        {connector.name === 'MetaMask' && '🦊'}
-                        {connector.name === 'WalletConnect' && '🔗'}
-                        {connector.name === 'Coinbase Wallet' && '🔵'}
-                        {connector.name === 'Injected' && '💉'}
-                        {!['MetaMask', 'WalletConnect', 'Coinbase Wallet', 'Injected'].includes(connector.name) && '👛'}
-                      </span>
-                      <span className="text-sm text-white">{connector.name}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+          <div className="text-xs text-gray-400">—</div>
         </div>
         
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
