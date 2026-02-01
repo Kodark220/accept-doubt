@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
 
 export default function WalletConnect() {
-  // If WalletConnect is not enabled via env, don't show WalletConnect option in the UI
+  // WalletConnect option may be disabled in dev if no project id is set.
+  // Do not return early here — only hide the WalletConnect connector option
+  // later in the UI. Returning here prevented the whole Connect button
+  // from rendering in development.
   const { walletConnectEnabled } = require('../utils/web3Config');
-  if (!walletConnectEnabled) {
-    return null; // no UI for WalletConnect when projectId not configured
-  }
   const { address, isConnected, connector } = useAccount();
   const { connect, connectors, isPending, error } = useConnect();
   const { disconnect } = useDisconnect();
