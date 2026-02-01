@@ -5,7 +5,9 @@ import { mainnet, sepolia, polygon, arbitrum, optimism, base, type Chain } from 
 import { walletConnect, injected, coinbaseWallet } from 'wagmi/connectors';
 
 // WalletConnect Project ID - Get yours at https://cloud.walletconnect.com
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || 'demo-project-id';
+// Leave unset or empty in development to avoid WalletConnect explorer errors (uses demo id otherwise)
+const projectId = (process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '').trim();
+export const walletConnectEnabled = Boolean(projectId);
 
 // GenLayer StudioNet - Custom chain for GenLayer blockchain
 export const genlayerStudioNet = {
@@ -33,7 +35,8 @@ export const wagmiConfig = createConfig({
   chains,
   connectors: [
     injected(), // MetaMask, Brave, etc.
-    walletConnect({ projectId }), // WalletConnect for mobile wallets
+    // Only enable WalletConnect if a real projectId is configured to avoid explorer 400 errors
+    ...(walletConnectEnabled ? [walletConnect({ projectId })] : []),
     coinbaseWallet({ appName: 'Accept or Doubt' }), // Coinbase Wallet
   ],
   transports: {
