@@ -45,7 +45,7 @@ export default function WalletConnect() {
     let patched = false;
 
     try {
-      console.log('Attempting connect with', { id: c.id, name: c.name, ready: c.ready });
+      console.log('Attempting connect with', { id: c.id, name: c.name, ready: c.ready, connector: c });
 
       const eth = (typeof window !== 'undefined' ? (window as any).ethereum : undefined);
 
@@ -82,11 +82,12 @@ export default function WalletConnect() {
         }
       }
 
+      console.log('Calling wagmi.connect with connector', c?.id || c?.name);
       await connect({ connector: c });
-      console.log('connect returned');
+      console.log('wagmi.connect returned; check wagmi state for updates');
       setShowOptions(false);
     } catch (e: any) {
-      console.error('connect failed', e);
+      console.error('connect failed', e, e?.stack);
       setLastError(e?.message || String(e));
     } finally {
       if (patched && originalEth) {
