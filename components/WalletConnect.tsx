@@ -41,14 +41,48 @@ export default function WalletConnect() {
 
   const handleConnectorClick = async (c: any) => {
     setLastError(null);
+    let originalEth: any = null;
+    let patched = false;
+
     try {
       console.log('Attempting connect with', { id: c.id, name: c.name, ready: c.ready });
+
+      // If the injected connector is chosen and multiple providers are injected
+      // (MetaMask + OKX etc.), temporarily set window.ethereum to the preferred
+      // provider so the connector targets the right extension. We restore it
+      // afterwards to avoid side effects.
+      const eth = (typeof window !== 'undefined' ? (window as any).ethereum : undefined);
+      if (eth && eth.providers && Array.isArray(eth.providers) && eth.providers.length) {
+        // Preference: MetaMask first, then OKX, then first provider
+        const pref = (c.name || '').toLowerCase().includes('metamask')
+          ? eth.providers.find((p: any) => p.isMetaMask) || eth.providers[0]
+          : (c.name || '').toLowerCase().includes('okx')
+          ? eth.providers.find((p: any) => p.isOkxWallet) || eth.providers[0]
+          : eth.providers.find((p: any) => p.isMetaMask) || eth.providers.find((p: any) => p.isOkxWallet) || eth.providers[0];
+
+        if (pref && pref !== eth) {
+          originalEth = eth;
+          (window as any).ethereum = pref;
+          patched = true;
+          console.log('Temporarily set window.ethereum to preferred provider', { name: pref?.provider?.name || pref?.isMetaMask ? 'MetaMask' : pref?.isOkxWallet ? 'OKX' : 'Injected' });
+        }
+      }
+
       await connect({ connector: c });
       console.log('connect returned');
       setShowOptions(false);
     } catch (e: any) {
       console.error('connect failed', e);
       setLastError(e?.message || String(e));
+    } finally {
+      if (patched && originalEth) {
+        try {
+          (window as any).ethereum = originalEth;
+          console.log('Restored original window.ethereum');
+        } catch (err) {
+          console.warn('Failed to restore window.ethereum', err);
+        }
+      }
     }
   };
 
