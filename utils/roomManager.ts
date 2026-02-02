@@ -178,9 +178,11 @@ export function allPlayersVoted(room: RoomState): boolean {
 // Advance to next round and update scores
 export function advanceRound(
   room: RoomState, 
-  consensus: 'trust' | 'doubt',
-  pointsPerRound: number = 10
+  consensus: 'trust' | 'doubt'
 ): RoomState {
+  // Points per round: 100 total / totalRounds (same as single player)
+  const pointsPerRound = Math.round(100 / room.totalRounds);
+  
   const updatedPlayers = room.players.map(p => {
     const correct = p.currentVote === consensus;
     return {
