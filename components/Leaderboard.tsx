@@ -28,7 +28,7 @@ export default function Leaderboard({ xp, accuracy, appealsWon, history }: Leade
         </div>
       </div>
       <div className="mt-6 space-y-3">
-        {history.map((entry, idx) => (
+        {history.filter((h) => h.finalized).map((entry, idx) => (
           <div key={`${entry.scenario.id}-${idx}`} className="border border-white/10 rounded-2xl p-3">
             <p className="text-sm text-gray-300">{entry.scenario.text}</p>
             <p className="text-xs uppercase tracking-[0.3em] text-white/60">You voted {entry.playerChoice}</p>

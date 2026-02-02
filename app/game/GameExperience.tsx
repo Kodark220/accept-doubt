@@ -331,10 +331,10 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
         {txHash && (
           <p className="text-xs text-gray-400 break-all pt-2 border-t border-white/10">TX: {txHash}</p>
         )}
-        <div className="mt-6 space-y-3">
+          <div className="mt-6 space-y-3">
           <h3 className="text-sm text-gray-300 uppercase tracking-[0.3em]">Round breakdown</h3>
           <div className="grid gap-2">
-            {gameState.history.map((h, idx) => (
+            {gameState.history.filter((h) => h.finalized).map((h, idx) => (
               <div key={idx} className="flex items-center justify-between bg-white/5 rounded-xl p-3">
                 <div className="flex-1">
                   <p className="text-sm font-semibold truncate">{h.scenario.text}</p>
@@ -440,7 +440,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
       <div className="mt-6 space-y-3">
         <h3 className="text-sm text-gray-300 uppercase tracking-[0.3em]">Round breakdown</h3>
         <div className="grid gap-2">
-          {gameState.history.map((h, idx) => (
+          {gameState.history.filter((h) => h.finalized).map((h, idx) => (
             <div key={idx} className="flex items-center justify-between bg-white/5 rounded-xl p-3">
               <div className="flex-1">
                 <p className="text-sm font-semibold truncate">{h.scenario.text}</p>
