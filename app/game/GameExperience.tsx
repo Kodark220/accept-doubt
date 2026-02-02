@@ -184,6 +184,15 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     setCanVoteWithTimer(true);
   };
 
+  const handleConfirmAndSubmit = async () => {
+    // Start the submit flow; leaderboard will be revealed when on-chain confirmation arrives
+    try {
+      await handleSubmitScoreSafe();
+    } catch (err) {
+      console.error('Confirm & submit failed:', err);
+    }
+  };
+
 
   const [activePanel, setActivePanel] = useState<'play'|'history'>('play');
   const panelOptions: { id: 'play'; label: string }[] = [
@@ -297,6 +306,13 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
       }
     };
   }, []);
+
+  // When on-chain confirmation completes, reveal final results if the player previously clicked confirm
+  useEffect(() => {
+    if (scoreSubmitted && !showConfirmedResults) {
+      setShowConfirmedResults(true);
+    }
+  }, [scoreSubmitted, showConfirmedResults]);
 
   const manualCheckStatus = async () => {
     if (!txHash) return;
@@ -612,8 +628,14 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
               // After game ends, require click-to-confirm before showing final dashboard
               !showConfirmedResults ? (
                 <div className="card-gradient rounded-3xl p-6 mb-4 text-sm text-gray-300">
-                  <p className="mb-3">All claims completed. Review resolved verdicts above. Click to confirm final results.</p>
-                  <button onClick={() => setShowConfirmedResults(true)} className="w-full rounded-2xl bg-genlayer-blue px-4 py-2 text-white font-semibold">Confirm Final Results</button>
+                  <p className="mb-3">All claims completed. Review resolved verdicts above. Click to confirm and submit your score to GenLayer.</p>
+                  <button onClick={handleConfirmAndSubmit} className="w-full rounded-2xl bg-genlayer-blue px-4 py-2 text-white font-semibold">Confirm & Submit Score</button>
+                  {scorePending && !scoreSubmitted && (
+                    <div className="mt-3 flex items-center gap-2 text-sm text-gray-300">
+                      <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white/60 animate-spin" />
+                      <span>Please wait for your final result while consensus finalizes.</span>
+                    </div>
+                  )}
                 </div>
               ) : null
             ) : (
@@ -643,8 +665,8 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
         </div>
             {/* Single dashboard only — no additional Leaderboard component here */}
 
-        {/* Show confirmed final dashboard after player confirms results */}
-        {gameOver && showConfirmedResults && (
+        {/* Show confirmed final dashboard after on-chain confirmation arrives */}
+        {gameOver && showConfirmedResults && scoreSubmitted && (
           <Leaderboard
             xp={leaderboard.xp}
             accuracy={leaderboard.accuracy}
@@ -652,6 +674,8 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
             history={gameState.history}
           />
         )}
+
+        {/* Reveal final results automatically when on-chain confirmation completes */}
 
         {/* Confirmation modal overlay when score is pending and not yet confirmed */}
         {scorePending && !scoreSubmitted && (
