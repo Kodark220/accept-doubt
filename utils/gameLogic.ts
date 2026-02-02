@@ -98,12 +98,24 @@ export function finalizeRound(
   state: GameState,
   scenarioText: string,
   consensus: ConsensusResult,
-  appealOutcome?: AppealOutcome
+  appealOutcome?: AppealOutcome,
+  originalScenario?: ScenarioClaim,
+  playerChoice?: 'trust' | 'doubt'
 ): GameState {
+  // First check if already finalized for this scenario to avoid duplicates
+  const alreadyFinalized = state.history.find((h) => h.scenario.text === scenarioText && h.finalized);
+  if (alreadyFinalized) {
+    // Already finalized, do nothing
+    return state;
+  }
+
   const idx = state.history.findIndex((h) => h.scenario.text === scenarioText && !h.finalized);
   if (idx === -1) {
     // No provisional entry — fall back to recording normally
-    return recordRound(state, { text: scenarioText, detail: '', category: '' } as ScenarioClaim, consensus.consensus as 'trust' | 'doubt', consensus, appealOutcome);
+    const scenario = originalScenario || { text: scenarioText, detail: '', category: '', id: `fallback-${Date.now()}` } as ScenarioClaim;
+    // Use player's choice if provided, otherwise consensus (fallback)
+    const choice = playerChoice || consensus.consensus as 'trust' | 'doubt';
+    return recordRound(state, scenario, choice, consensus, appealOutcome);
   }
 
   const existing = state.history[idx];

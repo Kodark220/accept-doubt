@@ -118,24 +118,29 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     const provisional: PendingRound = { scenario: currentScenario, playerChoice: choice, consensus: { consensus: choice, confidence: 0 } as unknown as ConsensusResult };
     setPendingRound(provisional);
 
+    // Capture the scenario to avoid closure issues
+    const scenarioToFinalize = currentScenario;
+
     // Resolve consensus in background and record when available
     (async () => {
       let consensus: ConsensusResult;
       try {
-        consensus = await resolveConsensus(currentScenario);
+        consensus = await resolveConsensus(scenarioToFinalize);
       } catch (err) {
         console.error('Consensus resolution failed, using fallback:', err);
         consensus = { consensus: choice, confidence: 0.5 } as unknown as ConsensusResult;
       }
 
-      const resolved: PendingRound = { scenario: currentScenario, playerChoice: choice, consensus };
+      const resolved: PendingRound = { scenario: scenarioToFinalize, playerChoice: choice, consensus };
       setPendingRound(resolved);
 
-      // Finalize the round (convert provisional to finalized and update counts)
-      // Use current gameState to compute updated state synchronously so we can expose the lastRound immediately.
-      const updatedState = finalizeRound(gameState, currentScenario.text, consensus);
-      setGameState(updatedState);
-      setLastRound(updatedState.history[updatedState.history.length - 1]);
+      // Finalize the round using functional update to get fresh state
+      setGameState((prevState) => {
+        const updatedState = finalizeRound(prevState, scenarioToFinalize.text, consensus, undefined, scenarioToFinalize, choice);
+        // Set lastRound outside of setState to avoid issues
+        setTimeout(() => setLastRound(updatedState.history[updatedState.history.length - 1]), 0);
+        return updatedState;
+      });
     })();
   };
 
@@ -307,12 +312,17 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     };
   }, []);
 
-  // When on-chain confirmation completes, reveal final results if the player previously clicked confirm
+  // Reveal final results when game is over OR when on-chain confirmation completes
   useEffect(() => {
+    // Automatically show results when game ends (no need to wait for blockchain)
+    if (gameOver && !showConfirmedResults) {
+      setShowConfirmedResults(true);
+    }
+    // Also show if blockchain confirms
     if (scoreSubmitted && !showConfirmedResults) {
       setShowConfirmedResults(true);
     }
-  }, [scoreSubmitted, showConfirmedResults]);
+  }, [gameOver, scoreSubmitted, showConfirmedResults]);
 
   const manualCheckStatus = async () => {
     if (!txHash) return;
