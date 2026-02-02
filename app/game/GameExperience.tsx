@@ -57,6 +57,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
   const [txHash, setTxHash] = useState<string | undefined>(undefined);
   const [gameOver, setGameOver] = useState(false);
   const [readyForNext, setReadyForNext] = useState(false);
+  const [showConfirmedResults, setShowConfirmedResults] = useState(false);
 
   // Poll / timeout UI states for pending confirmations
   const [pollStartTime, setPollStartTime] = useState<number | null>(null);
@@ -127,8 +128,11 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
       const resolved: PendingRound = { scenario: currentScenario, playerChoice: choice, consensus };
       setPendingRound(resolved);
 
-        // Safely finalize the round (will update counts). If no provisional entry exists, finalizeRound falls back.
-        setGameState((prev) => finalizeRound(prev, currentScenario.text, consensus));
+      // Finalize the round (convert provisional to finalized and update counts)
+      // Use current gameState to compute updated state synchronously so we can expose the lastRound immediately.
+      const updatedState = finalizeRound(gameState, currentScenario.text, consensus);
+      setGameState(updatedState);
+      setLastRound(updatedState.history[updatedState.history.length - 1]);
     })();
   };
 
@@ -559,7 +563,11 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                     onAppeal={requestAppeal}
                   />
                 )}
-                {/* Round results are hidden during play. All round outcomes are revealed together at the end of the game. */}
+
+                {/* Show per-round finalized verdicts as they arrive */}
+                {lastRound && (
+                  <RoundResults lastRound={lastRound} />
+                )}
                 <div className="flex gap-3">
                   <button
                     onClick={handleNextClick}
@@ -579,7 +587,15 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
             )}
           </div>
           <div>
-            {gameOver ? null : (
+            {gameOver ? (
+              // After game ends, require click-to-confirm before showing final dashboard
+              !showConfirmedResults ? (
+                <div className="card-gradient rounded-3xl p-6 mb-4 text-sm text-gray-300">
+                  <p className="mb-3">All claims completed. Review resolved verdicts above. Click to confirm final results.</p>
+                  <button onClick={() => setShowConfirmedResults(true)} className="w-full rounded-2xl bg-genlayer-blue px-4 py-2 text-white font-semibold">Confirm Final Results</button>
+                </div>
+              ) : null
+            ) : (
               <div className="card-gradient rounded-3xl p-6 mb-4 text-sm text-gray-300">
                 Complete all {TOTAL_ROUNDS} claims to see the full scorecard and agree/disagree summary.
               </div>
@@ -604,7 +620,17 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
             </div>
           </div>
         </div>
-        {/* Single dashboard only — no additional Leaderboard component here */}
+            {/* Single dashboard only — no additional Leaderboard component here */}
+
+        {/* Show confirmed final dashboard after player confirms results */}
+        {gameOver && showConfirmedResults && (
+          <Leaderboard
+            xp={leaderboard.xp}
+            accuracy={leaderboard.accuracy}
+            appealsWon={leaderboard.appealsWon}
+            history={gameState.history}
+          />
+        )}
 
         {/* Confirmation modal overlay when score is pending and not yet confirmed */}
         {scorePending && !scoreSubmitted && (
