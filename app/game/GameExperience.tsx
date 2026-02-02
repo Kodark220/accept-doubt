@@ -107,13 +107,13 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     if (!currentScenario) return;
     setCanVoteWithTimer(false);
 
-    // Get consensus (contract or mock)
+    // Resolve consensus immediately, but don't display final scoreboard until game end.
     const consensus = await resolveConsensus(currentScenario);
 
     const pending: PendingRound = { scenario: currentScenario, playerChoice: choice, consensus };
     setPendingRound(pending);
 
-    // Record provisional round (no appeal yet)
+    // Record round into game state
     const newState = recordRound(gameState, currentScenario, choice, consensus);
     setGameState(newState);
     setLastRound(newState.history[newState.history.length - 1]);
@@ -635,6 +635,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
             </div>
           </div>
         )}
+        
       </div>
     </main>
   );
