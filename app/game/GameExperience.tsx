@@ -462,17 +462,37 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             {gameOver ? (
-              // GAME OVER - only show final score panels if at least one round was played
+              // GAME OVER - show a single compact dashboard if rounds were played
               gameState.roundsPlayed > 0 ? (
                 <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-6">
-                  {scoreSubmitted ? confirmedScorePanel : unconfirmedScorePanel}
+                  <p className="text-xs uppercase tracking-[0.5em] text-genlayer-accent">Final Results</p>
+                  <h2 className="text-4xl font-bold text-white">{leaderboard.score} / 100</h2>
+                  <div className="text-lg text-white/80">
+                    <span className="font-semibold">{initialUsername}</span> • {leaderboard.accuracy}% Accuracy
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 mt-4">
+                    <div>
+                      <p className="text-xs text-gray-400">XP</p>
+                      <p className="text-lg font-bold">{leaderboard.xp}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Appeals</p>
+                      <p className="text-lg font-bold">{leaderboard.appealsWon}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Correct</p>
+                      <p className="text-lg font-bold">{gameState.correct}/{TOTAL_ROUNDS}</p>
+                    </div>
+                  </div>
 
-                  <button
-                    onClick={restartGame}
-                    className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
-                  >
-                    Play Again
-                  </button>
+                  <div className="mt-6">
+                    <button
+                      onClick={restartGame}
+                      className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
+                    >
+                      Play Again
+                    </button>
+                  </div>
                 </section>
               ) : (
                 <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-4">
@@ -537,43 +557,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
             )}
           </div>
           <div>
-            {gameOver ? (
-              <div className="card-gradient rounded-3xl p-6 mb-4 space-y-3">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.4em] text-genlayer-accent">Final scoreboard</p>
-                    <p className="text-base text-gray-200">Mode: {modeLabel}</p>
-                  </div>
-                  <span className="text-xs text-white/70">Completed {TOTAL_ROUNDS} claims</span>
-                </div>
-                <div className="grid gap-3">
-                  <div className="flex justify-between text-sm text-gray-200">
-                    <span>XP</span>
-                    <strong className="text-lg">{leaderboard.xp}</strong>
-                  </div>
-                  <div className="flex justify-between text-sm text-gray-200">
-                    <span>Accuracy</span>
-                    <strong className="text-lg">{leaderboard.accuracy}%</strong>
-                  </div>
-                  <div className="flex justify-between text-sm text-gray-200">
-                    <span>Player</span>
-                    <strong className="text-lg">{initialUsername}</strong>
-                  </div>
-                  <div className="flex justify-between text-sm text-gray-200">
-                    <span>Correct trusts</span>
-                    <strong className="text-lg">{gameState.correctTrusts}</strong>
-                  </div>
-                  <div className="flex justify-between text-sm text-gray-200">
-                    <span>Correct doubts</span>
-                    <strong className="text-lg">{gameState.correctDoubts}</strong>
-                  </div>
-                  <div className="flex justify-between text-sm text-gray-200">
-                    <span>Appeals won</span>
-                    <strong className="text-lg">{gameState.appealsWon}</strong>
-                  </div>
-                </div>
-              </div>
-            ) : (
+            {gameOver ? null : (
               <div className="card-gradient rounded-3xl p-6 mb-4 text-sm text-gray-300">
                 Complete all {TOTAL_ROUNDS} claims to see the full scorecard and agree/disagree summary.
               </div>
@@ -598,14 +582,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
             </div>
           </div>
         </div>
-        {gameOver && gameState.roundsPlayed > 0 && (
-          <Leaderboard
-            xp={leaderboard.xp}
-            accuracy={leaderboard.accuracy}
-            appealsWon={leaderboard.appealsWon}
-            history={gameState.history}
-          />
-        )}
+        {/* Single dashboard only — no additional Leaderboard component here */}
 
         {/* Confirmation modal overlay when score is pending and not yet confirmed */}
         {scorePending && !scoreSubmitted && (
