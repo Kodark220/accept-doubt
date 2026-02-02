@@ -29,14 +29,14 @@ export default function Leaderboard({ xp, accuracy, appealsWon, history }: Leade
               <div className="flex-1">
                 <p className="text-sm font-semibold">Round {roundNum}: {entry.scenario.text}</p>
                 <p className="text-xs text-gray-400 mt-1">
-                  You chose: <span className="text-white">{entry.playerChoice}</span> • 
-                  Correct answer: <span className="text-white">{entry.consensus}</span>
+                  You voted: <span className="text-white">{entry.playerChoice}</span> • 
+                  Consensus: <span className="text-white">{entry.consensus}</span>
                 </p>
               </div>
               <div className="ml-4 text-right">
                 <p className="text-lg font-bold">{points} pts</p>
                 <p className={entry.correct ? 'text-green-400 text-xs font-bold' : 'text-red-400 text-xs font-bold'}>
-                  {entry.correct ? '✓ Correct' : '✗ Wrong'}
+                  {entry.correct ? '✓ Match' : '✗ Mismatch'}
                 </p>
               </div>
             </div>
