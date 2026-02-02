@@ -12,6 +12,7 @@ export type RoundHistory = {
     success: boolean;
     detail: string;
   };
+  finalized?: boolean;
 };
 
 export type GameState = {
@@ -62,6 +63,8 @@ export function recordRound(
           detail: appealOutcome?.detail ?? 'Additional validation completed.'
         }
       : undefined
+    ,
+    finalized: true
   };
 
   return {
@@ -72,6 +75,70 @@ export function recordRound(
     appealsWon: state.appealsWon + (appealSuccess ? 1 : 0),
     roundsPlayed: state.roundsPlayed + 1,
     history: [...state.history, historyItem]
+  };
+}
+
+export function addProvisionalRound(state: GameState, scenario: ScenarioClaim, playerChoice: 'trust' | 'doubt') {
+  const historyItem: RoundHistory = {
+    scenario,
+    playerChoice,
+    consensus: playerChoice,
+    consensusConfidence: 0,
+    correct: false,
+    finalized: false
+  };
+
+  return {
+    ...state,
+    history: [...state.history, historyItem]
+  };
+}
+
+export function finalizeRound(
+  state: GameState,
+  scenarioText: string,
+  consensus: ConsensusResult,
+  appealOutcome?: AppealOutcome
+): GameState {
+  const idx = state.history.findIndex((h) => h.scenario.text === scenarioText && !h.finalized);
+  if (idx === -1) {
+    // No provisional entry — fall back to recording normally
+    return recordRound(state, { text: scenarioText, detail: '', category: '' } as ScenarioClaim, consensus.consensus as 'trust' | 'doubt', consensus, appealOutcome);
+  }
+
+  const existing = state.history[idx];
+  const appealUsed = !!appealOutcome;
+  const appealSuccess = appealOutcome?.success ?? false;
+  const correct = existing.playerChoice === consensus.consensus || appealSuccess;
+  const correctTrusts = correct && existing.playerChoice === 'trust' ? 1 : 0;
+  const correctDoubts = correct && existing.playerChoice === 'doubt' ? 1 : 0;
+
+  const updated: RoundHistory = {
+    ...existing,
+    consensus: consensus.consensus,
+    consensusConfidence: consensus.confidence,
+    correct,
+    appeal: appealUsed
+      ? {
+          attempted: true,
+          success: appealSuccess,
+          detail: appealOutcome?.detail ?? 'Additional validation completed.'
+        }
+      : existing.appeal,
+    finalized: true
+  };
+
+  const newHistory = [...state.history];
+  newHistory[idx] = updated;
+
+  return {
+    ...state,
+    correct: state.correct + (correct ? 1 : 0),
+    correctTrusts: state.correctTrusts + correctTrusts,
+    correctDoubts: state.correctDoubts + correctDoubts,
+    appealsWon: state.appealsWon + (appealSuccess ? 1 : 0),
+    roundsPlayed: state.roundsPlayed + 1,
+    history: newHistory
   };
 }
 

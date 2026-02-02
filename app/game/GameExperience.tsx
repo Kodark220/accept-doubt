@@ -11,7 +11,7 @@ import RoundResults from '../../components/RoundResults';
 import Leaderboard from '../../components/Leaderboard';
 import ChatPanel from '../../components/ChatPanel';
 import { ScenarioClaim, buildScenarioQueue } from '../../utils/scenarios';
-import { initialGameState, recordRound, leaderboardSnapshot, RoundHistory } from '../../utils/gameLogic';
+import { initialGameState, recordRound, leaderboardSnapshot, RoundHistory, addProvisionalRound, finalizeRound } from '../../utils/gameLogic';
 import {
   resolveConsensus,
   resolveAppeal,
@@ -127,12 +127,8 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
       const resolved: PendingRound = { scenario: currentScenario, playerChoice: choice, consensus };
       setPendingRound(resolved);
 
-      // Safely record round using functional state update to avoid double-recording
-      setGameState((prev) => {
-        const already = prev.history.some((h) => h.scenario.text === currentScenario.text);
-        if (already) return prev;
-        return recordRound(prev, currentScenario, choice, consensus);
-      });
+        // Safely finalize the round (will update counts). If no provisional entry exists, finalizeRound falls back.
+        setGameState((prev) => finalizeRound(prev, currentScenario.text, consensus));
     })();
   };
 
@@ -152,7 +148,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
       setGameState((prev) => {
         const already = prev.history.some((h) => h.scenario.text === pendingRound.scenario.text);
         if (already) return prev;
-        return recordRound(prev, pendingRound.scenario, pendingRound.playerChoice, pendingRound.consensus as unknown as ConsensusResult);
+        return addProvisionalRound(prev, pendingRound.scenario, pendingRound.playerChoice);
       });
       setPendingRound(null);
     }
