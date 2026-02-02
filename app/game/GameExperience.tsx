@@ -113,10 +113,9 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     const pending: PendingRound = { scenario: currentScenario, playerChoice: choice, consensus };
     setPendingRound(pending);
 
-    // Record round into game state
+    // Record round into game state (do not surface per-round UI yet)
     const newState = recordRound(gameState, currentScenario, choice, consensus);
     setGameState(newState);
-    setLastRound(newState.history[newState.history.length - 1]);
     setReadyForNext(true);
   };
 
@@ -126,7 +125,6 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     // Update last round with appeal outcome by re-recording (simplified)
     const newState = recordRound(gameState, pendingRound.scenario, pendingRound.playerChoice, pendingRound.consensus, outcome);
     setGameState(newState);
-    setLastRound(newState.history[newState.history.length - 1]);
     setPendingRound(null);
     setReadyForNext(true);
   };
@@ -464,17 +462,29 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             {gameOver ? (
-              // GAME OVER - Show final score prominently
-              <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-6">
-                {scoreSubmitted ? confirmedScorePanel : unconfirmedScorePanel}
+              // GAME OVER - only show final score panels if at least one round was played
+              gameState.roundsPlayed > 0 ? (
+                <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-6">
+                  {scoreSubmitted ? confirmedScorePanel : unconfirmedScorePanel}
 
-                <button
-                  onClick={restartGame}
-                  className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
-                >
-                  Play Again
-                </button>
-              </section>
+                  <button
+                    onClick={restartGame}
+                    className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
+                  >
+                    Play Again
+                  </button>
+                </section>
+              ) : (
+                <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-4">
+                  <p className="text-sm text-gray-300">No results to display.</p>
+                  <button
+                    onClick={restartGame}
+                    className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
+                  >
+                    Play Again
+                  </button>
+                </section>
+              )
             ) : currentScenario ? (
               <>
                 <ScenarioDisplay
@@ -511,7 +521,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                 <div className="flex gap-3">
                   <button
                     onClick={handleNextClick}
-                    disabled={gameOver}
+                    disabled={gameOver || (!readyForNext && !timedOut)}
                     className="flex-1 rounded-2xl border border-white/30 py-3 text-sm font-semibold uppercase tracking-[0.4em] disabled:opacity-40"
                   >
                     {gameOver ? 'Game complete' : 'Next claim'}
@@ -588,7 +598,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
             </div>
           </div>
         </div>
-        {gameOver && (
+        {gameOver && gameState.roundsPlayed > 0 && (
           <Leaderboard
             xp={leaderboard.xp}
             accuracy={leaderboard.accuracy}
