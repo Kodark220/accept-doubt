@@ -12,6 +12,7 @@ type LeaderboardProps = {
 export default function Leaderboard({ xp, accuracy, appealsWon, history }: LeaderboardProps) {
   return (
     <section className="card-gradient rounded-3xl p-6 mt-6">
+      <p className="text-sm text-genlayer-accent uppercase tracking-[0.3em]">This is your final score</p>
       <h3 className="text-2xl font-semibold">Final leaderboard snapshot</h3>
       <div className="grid gap-4 mt-4 md:grid-cols-3">
         <div className="rounded-2xl bg-white/5 p-4">

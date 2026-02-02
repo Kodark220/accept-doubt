@@ -586,12 +586,16 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                     {gameOver ? 'Game complete' : 'Next claim'}
                   </button>
                   <div className="flex items-center gap-2 text-xs text-gray-400">
-                    {isConsensusPending && (
-                      <>
-                        <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white/60 animate-spin" />
-                        <span>Consensus resolving in background</span>
-                      </>
-                    )}
+                      {isConsensusPending && (
+                        <>
+                          <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white/60 animate-spin" />
+                          <span>
+                            {gameState.roundsPlayed < TOTAL_ROUNDS
+                              ? 'Please wait — consensus is finalizing for all answers. You can continue playing; results will be revealed when complete.'
+                              : 'Consensus resolving for final score.'}
+                          </span>
+                        </>
+                      )}
                   </div>
                   <button
                     onClick={restartGame}
