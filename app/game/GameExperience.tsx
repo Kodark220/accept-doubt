@@ -380,7 +380,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
             </div>
           </div>
         ) : (
-          <span>Score will be revealed after you submit it to GenLayer.</span>
+          <span>Score will be revealed after you submit it to GenLayer. Learn more about wallet confirmation and on-chain submission patterns at <a href="https://github.com/genlayerlabs/genlayer-project-boilerplate" target="_blank" rel="noopener noreferrer" className="underline">GenLayer boilerplate</a>.</span>
         )}
       </div>
 

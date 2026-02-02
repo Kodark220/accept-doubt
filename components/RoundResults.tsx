@@ -21,6 +21,7 @@ export default function RoundResults({ lastRound, pending }: RoundResultsProps) 
             Validators currently lean {pending.consensus} ({Math.round(pending.confidence * 100)}%)
           </p>
           <p className="mt-1 text-lg">You voted {pending.playerChoice}. Appeal to sway extra validators.</p>
+          <p className="mt-3 text-xs text-gray-400">Waiting for consensus — this may take a few seconds. Please stay on this page until the verdict finalizes.</p>
         </div>
       )}
       {lastRound && (
