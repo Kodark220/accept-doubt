@@ -868,17 +868,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
             </div>
           </div>
         </div>
-            {/* Single dashboard only — no additional Leaderboard component here */}
-
-        {/* Show confirmed final dashboard after on-chain confirmation arrives */}
-        {gameOver && showConfirmedResults && scoreSubmitted && (
-          <Leaderboard
-            xp={leaderboard.xp}
-            accuracy={leaderboard.accuracy}
-            appealsWon={leaderboard.appealsWon}
-            history={gameState.history}
-          />
-        )}
+            {/* Final dashboard is already shown in the main game area above */}
 
         {/* Reveal final results automatically when on-chain confirmation completes */}
 
