@@ -17,10 +17,13 @@ export default function RoundResults({ lastRound, pending }: RoundResultsProps) 
       <h3 className="text-xl font-semibold">Round verdict</h3>
       {pending && (
         <div className="mt-2">
-          <p className="text-sm text-gray-300">
-            Validators currently lean {pending.consensus} ({Math.round(pending.confidence * 100)}%)
-          </p>
-          <p className="mt-1 text-lg">You voted {pending.playerChoice}. Appeal to sway extra validators.</p>
+          <div className="flex items-center gap-3">
+            <div className="h-6 w-6 rounded-full border-4 border-t-transparent border-white/60 animate-spin" />
+            <div>
+              <p className="text-sm text-gray-300">Validators currently lean {pending.consensus} ({Math.round(pending.confidence * 100)}%)</p>
+              <p className="mt-1 text-lg">You voted {pending.playerChoice}. Appeal to sway extra validators.</p>
+            </div>
+          </div>
           <p className="mt-3 text-xs text-gray-400">Waiting for consensus — this may take a few seconds. Please stay on this page until the verdict finalizes.</p>
         </div>
       )}

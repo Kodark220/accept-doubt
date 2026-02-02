@@ -58,6 +58,8 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
   const [gameOver, setGameOver] = useState(false);
   const [readyForNext, setReadyForNext] = useState(false);
   const [showConfirmedResults, setShowConfirmedResults] = useState(false);
+  // Whether the current pending round is still waiting for consensus to finalize
+  const isConsensusPending = Boolean(pendingRound && !gameState.history.some((h) => h.scenario.text === pendingRound.scenario.text && h.finalized));
 
   // Poll / timeout UI states for pending confirmations
   const [pollStartTime, setPollStartTime] = useState<number | null>(null);
@@ -582,6 +584,14 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                   >
                     {gameOver ? 'Game complete' : 'Next claim'}
                   </button>
+                  <div className="flex items-center gap-2 text-xs text-gray-400">
+                    {isConsensusPending && (
+                      <>
+                        <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white/60 animate-spin" />
+                        <span>Consensus resolving in background</span>
+                      </>
+                    )}
+                  </div>
                   <button
                     onClick={restartGame}
                     className="flex-1 rounded-2xl border border-white/20 py-3 text-sm font-semibold uppercase tracking-[0.4em]"
