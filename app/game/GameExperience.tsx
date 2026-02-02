@@ -107,23 +107,30 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     if (!currentScenario) return;
     setCanVoteWithTimer(false);
 
-    // Resolve consensus immediately, but don't display final scoreboard until game end.
-    let consensus;
-    try {
-      consensus = await resolveConsensus(currentScenario);
-    } catch (err) {
-      console.error('Consensus resolution failed, using fallback:', err);
-      // Fallback: assume validators agree with player's choice at moderate confidence
-      consensus = { consensus: choice, confidence: 0.5 } as unknown as ConsensusResult;
-    }
-
-    const pending: PendingRound = { scenario: currentScenario, playerChoice: choice, consensus };
-    setPendingRound(pending);
-
-    // Record round into game state (do not surface per-round UI yet)
-    const newState = recordRound(gameState, currentScenario, choice, consensus);
-    setGameState(newState);
+    // Make Next available immediately so player can continue without waiting for consensus
     setReadyForNext(true);
+
+    // Set a provisional pending round so UI can reflect that a vote occurred
+    const provisional: PendingRound = { scenario: currentScenario, playerChoice: choice, consensus: { consensus: choice, confidence: 0 } as unknown as ConsensusResult };
+    setPendingRound(provisional);
+
+    // Resolve consensus in background and record when available
+    (async () => {
+      let consensus: ConsensusResult;
+      try {
+        consensus = await resolveConsensus(currentScenario);
+      } catch (err) {
+        console.error('Consensus resolution failed, using fallback:', err);
+        consensus = { consensus: choice, confidence: 0.5 } as unknown as ConsensusResult;
+      }
+
+      const resolved: PendingRound = { scenario: currentScenario, playerChoice: choice, consensus };
+      setPendingRound(resolved);
+
+      // Record round into game state (do not surface per-round UI yet)
+      const newState = recordRound(gameState, currentScenario, choice, consensus);
+      setGameState(newState);
+    })();
   };
 
   const requestAppeal = async () => {
