@@ -509,7 +509,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
             {gameOver ? (
               // GAME OVER - only reveal the compact final dashboard after player confirmation
               showConfirmedResults ? (
-                gameState.roundsPlayed > 0 ? (
+                gameState.history.filter((h) => h.finalized).length > 0 ? (
                   <section className="card-gradient rounded-3xl p-6 mb-6 space-y-3">
                     {/* All rounds stacked vertically */}
                     {(() => {
@@ -521,119 +521,35 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
 
                       return (
                         <>
-                          {/* Round 1 */}
-                          {finalized[0] && (
-                            <div className="border border-white/10 rounded-2xl p-4 bg-white/5">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <p className="text-sm font-semibold">Round 1: {finalized[0].scenario.text}</p>
-                                  <p className="text-xs text-gray-400 mt-1">You: {finalized[0].playerChoice} • Consensus: {finalized[0].consensus}</p>
-                                </div>
-                                <div className="ml-4 text-right">
-                                  <p className="text-lg font-bold">{finalized[0].correct ? perRoundPoints : 0} pts</p>
-                                  <p className={finalized[0].correct ? 'text-green-400 text-xs font-bold' : 'text-red-400 text-xs font-bold'}>
-                                    {finalized[0].correct ? 'Correct' : 'Wrong'}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Round 2 */}
-                          {finalized[1] && (
-                            <div className="border border-white/10 rounded-2xl p-4 bg-white/5">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <p className="text-sm font-semibold">Round 2: {finalized[1].scenario.text}</p>
-                                  <p className="text-xs text-gray-400 mt-1">You: {finalized[1].playerChoice} • Consensus: {finalized[1].consensus}</p>
-                                </div>
-                                <div className="ml-4 text-right">
-                                  <p className="text-lg font-bold">{finalized[1].correct ? perRoundPoints : 0} pts</p>
-                                  <p className={finalized[1].correct ? 'text-green-400 text-xs font-bold' : 'text-red-400 text-xs font-bold'}>
-                                    {finalized[1].correct ? 'Correct' : 'Wrong'}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Round 3 */}
-                          {finalized[2] && (
-                            <div className="border border-white/10 rounded-2xl p-4 bg-white/5">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <p className="text-sm font-semibold">Round 3: {finalized[2].scenario.text}</p>
-                                  <p className="text-xs text-gray-400 mt-1">You: {finalized[2].playerChoice} • Consensus: {finalized[2].consensus}</p>
-                                </div>
-                                <div className="ml-4 text-right">
-                                  <p className="text-lg font-bold">{finalized[2].correct ? perRoundPoints : 0} pts</p>
-                                  <p className={finalized[2].correct ? 'text-green-400 text-xs font-bold' : 'text-red-400 text-xs font-bold'}>
-                                    {finalized[2].correct ? 'Correct' : 'Wrong'}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Round 4 */}
-                          {finalized[3] && (
-                            <div className="border border-white/10 rounded-2xl p-4 bg-white/5">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <p className="text-sm font-semibold">Round 4: {finalized[3].scenario.text}</p>
-                                  <p className="text-xs text-gray-400 mt-1">You: {finalized[3].playerChoice} • Consensus: {finalized[3].consensus}</p>
-                                </div>
-                                <div className="ml-4 text-right">
-                                  <p className="text-lg font-bold">{finalized[3].correct ? perRoundPoints : 0} pts</p>
-                                  <p className={finalized[3].correct ? 'text-green-400 text-xs font-bold' : 'text-red-400 text-xs font-bold'}>
-                                    {finalized[3].correct ? 'Correct' : 'Wrong'}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Round 5 - FINAL RESULTS */}
-                          {finalized[4] && (
-                            <>
-                              <p className="text-sm text-genlayer-accent uppercase tracking-[0.5em] font-bold mt-4 text-center">Final Results</p>
-                              <div className="border border-white/10 rounded-2xl p-4 bg-white/5">
+                          {/* All finalized rounds */}
+                          {finalized.map((entry, idx) => {
+                            const roundNum = idx + 1;
+                            const points = entry.correct ? perRoundPoints : 0;
+                            return (
+                              <div key={`final-${entry.scenario.id}-${idx}`} className="border border-white/10 rounded-2xl p-4 bg-white/5">
                                 <div className="flex items-start justify-between">
                                   <div className="flex-1">
-                                    <p className="text-sm font-semibold">Round 5: {finalized[4].scenario.text}</p>
-                                    <p className="text-xs text-gray-400 mt-1">You: {finalized[4].playerChoice} • Consensus: {finalized[4].consensus}</p>
+                                    <p className="text-sm font-semibold">Round {roundNum}: {entry.scenario.text}</p>
+                                    <p className="text-xs text-gray-400 mt-1">You voted: {entry.playerChoice} • Consensus: {entry.consensus}</p>
                                   </div>
                                   <div className="ml-4 text-right">
-                                    <p className="text-lg font-bold">{finalized[4].correct ? perRoundPoints : 0} pts</p>
-                                    <p className={finalized[4].correct ? 'text-green-400 text-xs font-bold' : 'text-red-400 text-xs font-bold'}>
-                                      {finalized[4].correct ? 'Correct' : 'Wrong'}
+                                    <p className="text-lg font-bold">{points} pts</p>
+                                    <p className={entry.correct ? 'text-green-400 text-xs font-bold' : 'text-red-400 text-xs font-bold'}>
+                                      {entry.correct ? '✓ Match' : '✗ Mismatch'}
                                     </p>
                                   </div>
                                 </div>
                               </div>
-                            </>
-                          )}
+                            );
+                          })}
 
-                          {/* Totals - only when all 5 rounds are finalized */}
+                          {/* Final Score card - only when all 5 rounds are finalized */}
                           {allFinalized && (
-                            <div className="border-t-2 border-white/10 mt-4 pt-4 space-y-2">
+                            <div className="border-t-2 border-genlayer-accent/30 mt-4 pt-4 space-y-3">
+                              <p className="text-sm text-genlayer-accent uppercase tracking-[0.5em] font-bold text-center">Final Score</p>
                               <div className="rounded-2xl bg-genlayer-blue/10 p-4 text-center">
-                                <p className="text-xs uppercase tracking-[0.3em] text-gray-300 mb-2">Total Score</p>
                                 <p className="text-4xl font-bold text-white">{totalScore} / 100</p>
-                              </div>
-                              <div className="grid grid-cols-3 gap-2">
-                                <div className="rounded-2xl bg-white/5 p-3 text-center">
-                                  <p className="text-xs text-gray-400 uppercase">Correct</p>
-                                  <p className="text-2xl font-bold">{correctCount}/{TOTAL_ROUNDS}</p>
-                                </div>
-                                <div className="rounded-2xl bg-white/5 p-3 text-center">
-                                  <p className="text-xs text-gray-400 uppercase">Accuracy</p>
-                                  <p className="text-2xl font-bold">{leaderboard.accuracy}%</p>
-                                </div>
-                                <div className="rounded-2xl bg-white/5 p-3 text-center">
-                                  <p className="text-xs text-gray-400 uppercase">XP</p>
-                                  <p className="text-2xl font-bold">{leaderboard.xp}</p>
-                                </div>
+                                <p className="text-sm text-gray-300 mt-2">You got {correctCount} out of {TOTAL_ROUNDS} questions correct</p>
                               </div>
                               <div className="mt-4">
                                 <button
@@ -643,6 +559,14 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                                   Play Again
                                 </button>
                               </div>
+                            </div>
+                          )}
+
+                          {/* If not all finalized yet, show waiting message */}
+                          {!allFinalized && (
+                            <div className="border-t border-white/10 mt-4 pt-4 flex items-center gap-2 text-sm text-gray-300">
+                              <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white/60 animate-spin" />
+                              <span>Waiting for remaining rounds to finalize... ({finalized.length}/{TOTAL_ROUNDS})</span>
                             </div>
                           )}
                         </>
