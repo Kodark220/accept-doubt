@@ -628,7 +628,45 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
               // After game ends, require click-to-confirm before showing final dashboard
               !showConfirmedResults ? (
                 <div className="card-gradient rounded-3xl p-6 mb-4 text-sm text-gray-300">
-                  <p className="mb-3">All claims completed. Review resolved verdicts above. Click to confirm and submit your score to GenLayer.</p>
+                  <p className="mb-3">All claims completed. Review resolved verdicts below, then confirm to submit your score to GenLayer.</p>
+
+                  {/* If all rounds are finalized locally, show per-question correctness and totals */}
+                  {gameState.history.length === TOTAL_ROUNDS && gameState.history.every((h) => h.finalized) ? (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold mb-2">Final calculation</h4>
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {gameState.history.map((h, i) => (
+                          <div key={i} className="flex items-center justify-between bg-white/5 rounded-xl p-3">
+                            <div className="flex-1">
+                              <p className="text-sm font-semibold truncate">{i + 1}. {h.scenario.text}</p>
+                              <p className="text-xs text-gray-400 mt-1">You: {h.playerChoice} • Consensus: {h.consensus}</p>
+                            </div>
+                            <div className="ml-4">{h.correct ? <span className="text-green-400 font-bold">Correct</span> : <span className="text-red-400 font-bold">Wrong</span>}</div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 grid grid-cols-3 gap-3 text-sm">
+                        <div>
+                          <p className="text-xs text-gray-400">Score</p>
+                          <p className="font-bold text-white">{leaderboard.score} / 100</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Correct</p>
+                          <p className="font-bold text-white">{gameState.correct}/{TOTAL_ROUNDS}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-400">Accuracy</p>
+                          <p className="font-bold text-white">{leaderboard.accuracy}%</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-4 flex items-center gap-2 text-sm text-gray-300">
+                      <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white/60 animate-spin" />
+                      <span>Waiting for consensus to finalize all rounds. Final calculation will appear here.</span>
+                    </div>
+                  )}
+
                   <button onClick={handleConfirmAndSubmit} className="w-full rounded-2xl bg-genlayer-blue px-4 py-2 text-white font-semibold">Confirm & Submit Score</button>
                   {scorePending && !scoreSubmitted && (
                     <div className="mt-3 flex items-center gap-2 text-sm text-gray-300">
@@ -640,7 +678,30 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
               ) : null
             ) : (
               <div className="card-gradient rounded-3xl p-6 mb-4 text-sm text-gray-300">
-                Complete all {TOTAL_ROUNDS} claims to see the full scorecard and agree/disagree summary.
+                <h4 className="text-sm font-semibold mb-2">Round summary</h4>
+                <div className="space-y-2 max-h-56 overflow-y-auto">
+                  {scenarioQueue.map((s, idx) => {
+                    const hist = gameState.history.find((h) => h.scenario.text === s.text && h.finalized);
+                    const prov = gameState.history.find((h) => h.scenario.text === s.text && !h.finalized) || (pendingRound && pendingRound.scenario.text === s.text ? { playerChoice: pendingRound.playerChoice, consensus: pendingRound.consensus.consensus, provisional: true } : null);
+                    return (
+                      <div key={s.id} className="flex items-center justify-between bg-white/5 rounded-xl p-3">
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold truncate">{idx + 1}. {s.text}</p>
+                          {hist ? (
+                            <p className="text-xs text-gray-400 mt-1">Final: {hist.consensus} • You: {hist.playerChoice}</p>
+                          ) : prov ? (
+                            <p className="text-xs text-gray-400 mt-1">Pending: {prov.consensus} • You: {prov.playerChoice} <span className="text-xs text-yellow-300">(not final)</span></p>
+                          ) : (
+                            <p className="text-xs text-gray-400 mt-1">Not answered</p>
+                          )}
+                        </div>
+                        <div className="ml-4">
+                          {hist ? (hist.correct ? <span className="text-green-400 font-bold">Correct</span> : <span className="text-red-400 font-bold">Wrong</span>) : prov ? <span className="text-yellow-300 font-bold">Pending</span> : <span className="text-white/60">—</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
             <div className="flex gap-2 mb-4">
