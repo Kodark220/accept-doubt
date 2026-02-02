@@ -706,9 +706,32 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                   />
                 )}
 
-                {/* Show per-round finalized verdicts as they arrive */}
-                {lastRound && (
-                  <RoundResults lastRound={lastRound} />
+                {/* Show ALL finalized rounds stacked vertically during gameplay */}
+                {gameState.history.filter((h) => h.finalized).length > 0 && (
+                  <section className="card-gradient rounded-3xl p-4 mb-4 space-y-2">
+                    <p className="text-xs text-gray-400 uppercase tracking-[0.3em] mb-2">Completed Rounds</p>
+                    {gameState.history.filter((h) => h.finalized).map((entry, idx) => {
+                      const roundNum = idx + 1;
+                      const perRoundPoints = Math.round(100 / TOTAL_ROUNDS);
+                      const points = entry.correct ? perRoundPoints : 0;
+                      return (
+                        <div key={`${entry.scenario.id}-${idx}`} className="border border-white/10 rounded-xl p-3 bg-white/5">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="text-sm font-semibold">Round {roundNum}: {entry.scenario.text}</p>
+                              <p className="text-xs text-gray-400 mt-1">You voted: {entry.playerChoice} • Consensus: {entry.consensus}</p>
+                            </div>
+                            <div className="ml-3 text-right">
+                              <p className="text-base font-bold">{points} pts</p>
+                              <p className={entry.correct ? 'text-green-400 text-xs font-bold' : 'text-red-400 text-xs font-bold'}>
+                                {entry.correct ? '✓ Match' : '✗ Mismatch'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </section>
                 )}
                 <div className="flex gap-3">
                   <button
