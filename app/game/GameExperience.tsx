@@ -22,6 +22,7 @@ import {
   waitForTransactionConfirmation,
   checkTransactionStatus
 } from '../../utils/genlayerClient';
+import { addToLeaderboard } from '../../utils/globalLeaderboard';
 
 import { toast } from 'sonner';
 import { useWallet } from '../../lib/wallet/WalletProvider';
@@ -58,6 +59,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
   const [gameOver, setGameOver] = useState(false);
   const [readyForNext, setReadyForNext] = useState(false);
   const [showConfirmedResults, setShowConfirmedResults] = useState(false);
+  const [scoreSavedToLeaderboard, setScoreSavedToLeaderboard] = useState(false);
   // Whether the current pending round is still waiting for consensus to finalize
   // (declared after `gameState` below)
 
@@ -324,6 +326,22 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     }
   }, [gameOver, scoreSubmitted, showConfirmedResults]);
 
+  // Save score to global leaderboard when all rounds are finalized (single player only)
+  useEffect(() => {
+    if (scoreSavedToLeaderboard) return;
+    if (initialMode !== 'single') return; // Only for single player
+    
+    const finalized = gameState.history.filter((h) => h.finalized);
+    if (finalized.length === TOTAL_ROUNDS && gameOver) {
+      // All rounds finalized, save to leaderboard
+      const totalScore = finalized.reduce((sum, r) => sum + (r.correct ? Math.round(100 / TOTAL_ROUNDS) : 0), 0);
+      const correctCount = finalized.filter((r) => r.correct).length;
+      
+      addToLeaderboard(initialUsername, totalScore, correctCount, TOTAL_ROUNDS);
+      setScoreSavedToLeaderboard(true);
+    }
+  }, [gameState.history, gameOver, scoreSavedToLeaderboard, initialMode, initialUsername]);
+
   const manualCheckStatus = async () => {
     if (!txHash) return;
     try {
@@ -560,14 +578,23 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                               <div className="rounded-2xl bg-genlayer-blue/10 p-4 text-center">
                                 <p className="text-4xl font-bold text-white">{totalScore} / 100</p>
                                 <p className="text-sm text-gray-300 mt-2">You got {correctCount} out of {TOTAL_ROUNDS} questions correct</p>
+                                {scoreSavedToLeaderboard && (
+                                  <p className="text-xs text-green-400 mt-2">✓ Score saved to leaderboard!</p>
+                                )}
                               </div>
-                              <div className="mt-4">
+                              <div className="mt-4 flex gap-3">
                                 <button
                                   onClick={restartGame}
-                                  className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
+                                  className="flex-1 rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
                                 >
                                   Play Again
                                 </button>
+                                <Link
+                                  href="/leaderboard"
+                                  className="flex-1 rounded-2xl border border-white/30 px-6 py-4 text-base font-semibold tracking-[0.2em] text-white text-center"
+                                >
+                                  🏆 Leaderboard
+                                </Link>
                               </div>
                             </div>
                           )}
