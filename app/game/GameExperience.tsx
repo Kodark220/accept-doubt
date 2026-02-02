@@ -108,7 +108,14 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     setCanVoteWithTimer(false);
 
     // Resolve consensus immediately, but don't display final scoreboard until game end.
-    const consensus = await resolveConsensus(currentScenario);
+    let consensus;
+    try {
+      consensus = await resolveConsensus(currentScenario);
+    } catch (err) {
+      console.error('Consensus resolution failed, using fallback:', err);
+      // Fallback: assume validators agree with player's choice at moderate confidence
+      consensus = { consensus: choice, confidence: 0.5 } as unknown as ConsensusResult;
+    }
 
     const pending: PendingRound = { scenario: currentScenario, playerChoice: choice, consensus };
     setPendingRound(pending);
