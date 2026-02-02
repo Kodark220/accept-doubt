@@ -510,35 +510,144 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
               // GAME OVER - only reveal the compact final dashboard after player confirmation
               showConfirmedResults ? (
                 gameState.roundsPlayed > 0 ? (
-                  <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-6">
-                    <p className="text-xs uppercase tracking-[0.5em] text-genlayer-accent">Final Results</p>
-                    <h2 className="text-4xl font-bold text-white">{leaderboard.score} / 100</h2>
-                    <div className="text-lg text-white/80">
-                      <span className="font-semibold">{initialUsername}</span> • {leaderboard.accuracy}% Accuracy
-                    </div>
-                    <div className="grid grid-cols-3 gap-4 mt-4">
-                      <div>
-                        <p className="text-xs text-gray-400">XP</p>
-                        <p className="text-lg font-bold">{leaderboard.xp}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-400">Appeals</p>
-                        <p className="text-lg font-bold">{leaderboard.appealsWon}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-400">Correct</p>
-                        <p className="text-lg font-bold">{gameState.correct}/{TOTAL_ROUNDS}</p>
-                      </div>
-                    </div>
+                  <section className="card-gradient rounded-3xl p-6 mb-6 space-y-3">
+                    {/* All rounds stacked vertically */}
+                    {(() => {
+                      const finalized = gameState.history.filter((h) => h.finalized);
+                      const perRoundPoints = Math.round(100 / TOTAL_ROUNDS);
+                      const totalScore = finalized.reduce((sum, r) => sum + (r.correct ? perRoundPoints : 0), 0);
+                      const correctCount = finalized.filter((r) => r.correct).length;
+                      const allFinalized = finalized.length === TOTAL_ROUNDS;
 
-                    <div className="mt-6">
-                      <button
-                        onClick={restartGame}
-                        className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
-                      >
-                        Play Again
-                      </button>
-                    </div>
+                      return (
+                        <>
+                          {/* Round 1 */}
+                          {finalized[0] && (
+                            <div className="border border-white/10 rounded-2xl p-4 bg-white/5">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold">Round 1: {finalized[0].scenario.text}</p>
+                                  <p className="text-xs text-gray-400 mt-1">You: {finalized[0].playerChoice} • Consensus: {finalized[0].consensus}</p>
+                                </div>
+                                <div className="ml-4 text-right">
+                                  <p className="text-lg font-bold">{finalized[0].correct ? perRoundPoints : 0} pts</p>
+                                  <p className={finalized[0].correct ? 'text-green-400 text-xs font-bold' : 'text-red-400 text-xs font-bold'}>
+                                    {finalized[0].correct ? 'Correct' : 'Wrong'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Round 2 */}
+                          {finalized[1] && (
+                            <div className="border border-white/10 rounded-2xl p-4 bg-white/5">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold">Round 2: {finalized[1].scenario.text}</p>
+                                  <p className="text-xs text-gray-400 mt-1">You: {finalized[1].playerChoice} • Consensus: {finalized[1].consensus}</p>
+                                </div>
+                                <div className="ml-4 text-right">
+                                  <p className="text-lg font-bold">{finalized[1].correct ? perRoundPoints : 0} pts</p>
+                                  <p className={finalized[1].correct ? 'text-green-400 text-xs font-bold' : 'text-red-400 text-xs font-bold'}>
+                                    {finalized[1].correct ? 'Correct' : 'Wrong'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Round 3 */}
+                          {finalized[2] && (
+                            <div className="border border-white/10 rounded-2xl p-4 bg-white/5">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold">Round 3: {finalized[2].scenario.text}</p>
+                                  <p className="text-xs text-gray-400 mt-1">You: {finalized[2].playerChoice} • Consensus: {finalized[2].consensus}</p>
+                                </div>
+                                <div className="ml-4 text-right">
+                                  <p className="text-lg font-bold">{finalized[2].correct ? perRoundPoints : 0} pts</p>
+                                  <p className={finalized[2].correct ? 'text-green-400 text-xs font-bold' : 'text-red-400 text-xs font-bold'}>
+                                    {finalized[2].correct ? 'Correct' : 'Wrong'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Round 4 */}
+                          {finalized[3] && (
+                            <div className="border border-white/10 rounded-2xl p-4 bg-white/5">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold">Round 4: {finalized[3].scenario.text}</p>
+                                  <p className="text-xs text-gray-400 mt-1">You: {finalized[3].playerChoice} • Consensus: {finalized[3].consensus}</p>
+                                </div>
+                                <div className="ml-4 text-right">
+                                  <p className="text-lg font-bold">{finalized[3].correct ? perRoundPoints : 0} pts</p>
+                                  <p className={finalized[3].correct ? 'text-green-400 text-xs font-bold' : 'text-red-400 text-xs font-bold'}>
+                                    {finalized[3].correct ? 'Correct' : 'Wrong'}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Round 5 - FINAL RESULTS */}
+                          {finalized[4] && (
+                            <>
+                              <p className="text-sm text-genlayer-accent uppercase tracking-[0.5em] font-bold mt-4 text-center">Final Results</p>
+                              <div className="border border-white/10 rounded-2xl p-4 bg-white/5">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-semibold">Round 5: {finalized[4].scenario.text}</p>
+                                    <p className="text-xs text-gray-400 mt-1">You: {finalized[4].playerChoice} • Consensus: {finalized[4].consensus}</p>
+                                  </div>
+                                  <div className="ml-4 text-right">
+                                    <p className="text-lg font-bold">{finalized[4].correct ? perRoundPoints : 0} pts</p>
+                                    <p className={finalized[4].correct ? 'text-green-400 text-xs font-bold' : 'text-red-400 text-xs font-bold'}>
+                                      {finalized[4].correct ? 'Correct' : 'Wrong'}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                          )}
+
+                          {/* Totals - only when all 5 rounds are finalized */}
+                          {allFinalized && (
+                            <div className="border-t-2 border-white/10 mt-4 pt-4 space-y-2">
+                              <div className="rounded-2xl bg-genlayer-blue/10 p-4 text-center">
+                                <p className="text-xs uppercase tracking-[0.3em] text-gray-300 mb-2">Total Score</p>
+                                <p className="text-4xl font-bold text-white">{totalScore} / 100</p>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                <div className="rounded-2xl bg-white/5 p-3 text-center">
+                                  <p className="text-xs text-gray-400 uppercase">Correct</p>
+                                  <p className="text-2xl font-bold">{correctCount}/{TOTAL_ROUNDS}</p>
+                                </div>
+                                <div className="rounded-2xl bg-white/5 p-3 text-center">
+                                  <p className="text-xs text-gray-400 uppercase">Accuracy</p>
+                                  <p className="text-2xl font-bold">{leaderboard.accuracy}%</p>
+                                </div>
+                                <div className="rounded-2xl bg-white/5 p-3 text-center">
+                                  <p className="text-xs text-gray-400 uppercase">XP</p>
+                                  <p className="text-2xl font-bold">{leaderboard.xp}</p>
+                                </div>
+                              </div>
+                              <div className="mt-4">
+                                <button
+                                  onClick={restartGame}
+                                  className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
+                                >
+                                  Play Again
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </section>
                 ) : (
                   <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-4">
