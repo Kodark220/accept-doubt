@@ -127,9 +127,12 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
       const resolved: PendingRound = { scenario: currentScenario, playerChoice: choice, consensus };
       setPendingRound(resolved);
 
-      // Record round into game state (do not surface per-round UI yet)
-      const newState = recordRound(gameState, currentScenario, choice, consensus);
-      setGameState(newState);
+      // Safely record round using functional state update to avoid double-recording
+      setGameState((prev) => {
+        const already = prev.history.some((h) => h.scenario.text === currentScenario.text);
+        if (already) return prev;
+        return recordRound(prev, currentScenario, choice, consensus);
+      });
     })();
   };
 
@@ -144,9 +147,18 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
   };
 
   const handleNextClick = () => {
+    // If there's a pending vote that hasn't been recorded yet, persist a provisional result
+    if (pendingRound && gameState.roundsPlayed < currentIndex + 1) {
+      setGameState((prev) => {
+        const already = prev.history.some((h) => h.scenario.text === pendingRound.scenario.text);
+        if (already) return prev;
+        return recordRound(prev, pendingRound.scenario, pendingRound.playerChoice, pendingRound.consensus as unknown as ConsensusResult);
+      });
+      setPendingRound(null);
+    }
+
     if (currentIndex < scenarioQueue.length - 1) {
       setCurrentIndex((prev) => prev + 1);
-      setPendingRound(null);
       setReadyForNext(false);
       setCanVoteWithTimer(true);
       setTimer(30);
