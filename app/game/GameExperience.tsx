@@ -546,7 +546,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                       <div className="h-8 w-8 rounded-full border-4 border-t-transparent border-white/60 animate-spin" />
                       <div className="text-left">
                         <p className="text-sm text-gray-300">Waiting for consensus to finalize results. Final score will appear here when ready.</p>
-                        <p className="text-xs text-gray-400 mt-1">Rounds finalized: {gameState.history.filter((h) =&gt; h.finalized).length}/{TOTAL_ROUNDS}</p>
+                        <p className="text-xs text-gray-400 mt-1">Rounds finalized: {gameState.history.filter((h) => h.finalized).length}/{TOTAL_ROUNDS}</p>
                       </div>
                     </div>
                     <div className="mt-4">
