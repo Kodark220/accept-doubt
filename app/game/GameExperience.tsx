@@ -488,47 +488,53 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
         <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             {gameOver ? (
-              // GAME OVER - show a single compact dashboard if rounds were played
-              gameState.roundsPlayed > 0 ? (
-                <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-6">
-                  <p className="text-xs uppercase tracking-[0.5em] text-genlayer-accent">Final Results</p>
-                  <h2 className="text-4xl font-bold text-white">{leaderboard.score} / 100</h2>
-                  <div className="text-lg text-white/80">
-                    <span className="font-semibold">{initialUsername}</span> • {leaderboard.accuracy}% Accuracy
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 mt-4">
-                    <div>
-                      <p className="text-xs text-gray-400">XP</p>
-                      <p className="text-lg font-bold">{leaderboard.xp}</p>
+              // GAME OVER - only reveal the compact final dashboard after player confirmation
+              showConfirmedResults ? (
+                gameState.roundsPlayed > 0 ? (
+                  <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-6">
+                    <p className="text-xs uppercase tracking-[0.5em] text-genlayer-accent">Final Results</p>
+                    <h2 className="text-4xl font-bold text-white">{leaderboard.score} / 100</h2>
+                    <div className="text-lg text-white/80">
+                      <span className="font-semibold">{initialUsername}</span> • {leaderboard.accuracy}% Accuracy
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Appeals</p>
-                      <p className="text-lg font-bold">{leaderboard.appealsWon}</p>
+                    <div className="grid grid-cols-3 gap-4 mt-4">
+                      <div>
+                        <p className="text-xs text-gray-400">XP</p>
+                        <p className="text-lg font-bold">{leaderboard.xp}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400">Appeals</p>
+                        <p className="text-lg font-bold">{leaderboard.appealsWon}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-400">Correct</p>
+                        <p className="text-lg font-bold">{gameState.correct}/{TOTAL_ROUNDS}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Correct</p>
-                      <p className="text-lg font-bold">{gameState.correct}/{TOTAL_ROUNDS}</p>
-                    </div>
-                  </div>
 
-                  <div className="mt-6">
+                    <div className="mt-6">
+                      <button
+                        onClick={restartGame}
+                        className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
+                      >
+                        Play Again
+                      </button>
+                    </div>
+                  </section>
+                ) : (
+                  <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-4">
+                    <p className="text-sm text-gray-300">No results to display.</p>
                     <button
                       onClick={restartGame}
                       className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
                     >
                       Play Again
                     </button>
-                  </div>
-                </section>
+                  </section>
+                )
               ) : (
                 <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-4">
-                  <p className="text-sm text-gray-300">No results to display.</p>
-                  <button
-                    onClick={restartGame}
-                    className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
-                  >
-                    Play Again
-                  </button>
+                  <p className="text-sm text-gray-300">Results are hidden until you confirm them.</p>
                 </section>
               )
             ) : currentScenario ? (
