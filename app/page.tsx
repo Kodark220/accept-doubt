@@ -1,8 +1,10 @@
 ﻿'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import GenLayerLogo from '../components/GenLayerLogo';
+import RoomLobby from '../components/RoomLobby';
+import { RoomState, canPlayThisWeek, getRemainingPlays, getTimeUntilReset, getExpertiseLevel, getTotalXP } from '../utils/roomManager';
 
 const highlights = [
   'Play or practice alongside GenLayer validators in seconds.',
@@ -21,6 +23,22 @@ export default function LandingPage() {
   const [username, setUsername] = useState('');
   const [mode, setMode] = useState<'single' | 'multi'>('single');
   const [errorMessage, setErrorMessage] = useState('');
+  const [showMultiplayerLobby, setShowMultiplayerLobby] = useState(false);
+  
+  // Weekly play info
+  const [canPlay, setCanPlay] = useState(true);
+  const [remainingPlays, setRemainingPlays] = useState(1);
+  const [resetTime, setResetTime] = useState({ days: 0, hours: 0, minutes: 0 });
+  const [expertise, setExpertise] = useState({ level: 1, title: 'Novice', badge: '🌱', minXP: 0 });
+  const [totalXP, setTotalXP] = useState(0);
+
+  useEffect(() => {
+    setCanPlay(canPlayThisWeek());
+    setRemainingPlays(getRemainingPlays());
+    setResetTime(getTimeUntilReset());
+    setExpertise(getExpertiseLevel());
+    setTotalXP(getTotalXP());
+  }, []);
 
   const handleStart = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -30,15 +48,59 @@ export default function LandingPage() {
       return;
     }
     setErrorMessage('');
-    const seed = Date.now();
-    router.push(
-      `/game?mode=${mode}&username=${encodeURIComponent(safeName)}&seed=${seed}`
-    );
+    
+    if (mode === 'multi') {
+      setShowMultiplayerLobby(true);
+    } else {
+      const seed = Date.now();
+      router.push(
+        `/game?mode=${mode}&username=${encodeURIComponent(safeName)}&seed=${seed}`
+      );
+    }
   };
+
+  const handleMultiplayerGameStart = (room: RoomState, playerId: string) => {
+    // Store room info and navigate to multiplayer game
+    sessionStorage.setItem('currentRoom', JSON.stringify({ room, playerId }));
+    router.push(`/game?mode=multi&username=${encodeURIComponent(username)}&roomCode=${room.roomCode}&playerId=${playerId}`);
+  };
+
+  if (showMultiplayerLobby) {
+    return (
+      <main className="min-h-screen bg-genlayer-dark text-white">
+        <div className="max-w-2xl mx-auto px-6 py-16">
+          <RoomLobby
+            username={username}
+            onGameStart={handleMultiplayerGameStart}
+            onBack={() => setShowMultiplayerLobby(false)}
+          />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-genlayer-dark text-white">
       <div className="max-w-5xl mx-auto px-6 py-16 space-y-10">
+        {/* Player Stats Banner */}
+        {totalXP > 0 && (
+          <div className="flex items-center justify-between bg-white/5 rounded-2xl px-6 py-4">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">{expertise.badge}</span>
+              <div>
+                <p className="font-semibold">{expertise.title}</p>
+                <p className="text-sm text-gray-400">{totalXP} XP total</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-400">Multiplayer</p>
+              <p className={remainingPlays > 0 ? 'text-green-400' : 'text-yellow-400'}>
+                {remainingPlays > 0 ? `${remainingPlays} play left this week` : `Resets in ${resetTime.days}d ${resetTime.hours}h`}
+              </p>
+            </div>
+          </div>
+        )}
+
         <section className="card-gradient rounded-3xl p-8 space-y-6">
           <GenLayerLogo variant="white" />
           <p className="text-xs uppercase tracking-[0.5em] text-genlayer-accent text-center">
