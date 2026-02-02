@@ -542,13 +542,21 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                   </section>
                 ) : (
                   <section className="card-gradient rounded-3xl p-8 mb-6 text-center space-y-4">
-                    <p className="text-sm text-gray-300">No results to display.</p>
-                    <button
-                      onClick={restartGame}
-                      className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
-                    >
-                      Play Again
-                    </button>
+                    <div className="flex items-center justify-center gap-3">
+                      <div className="h-8 w-8 rounded-full border-4 border-t-transparent border-white/60 animate-spin" />
+                      <div className="text-left">
+                        <p className="text-sm text-gray-300">Waiting for consensus to finalize results. Final score will appear here when ready.</p>
+                        <p className="text-xs text-gray-400 mt-1">Rounds finalized: {gameState.history.filter((h) =&gt; h.finalized).length}/{TOTAL_ROUNDS}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <button
+                        onClick={restartGame}
+                        className="w-full rounded-2xl bg-gradient-to-r from-genlayer-purple to-genlayer-blue px-6 py-4 text-base font-semibold tracking-[0.2em] text-white"
+                      >
+                        Play Again
+                      </button>
+                    </div>
                   </section>
                 )
               ) : (
@@ -630,22 +638,54 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                 <div className="card-gradient rounded-3xl p-6 mb-4 text-sm text-gray-300">
                   <p className="mb-3">All claims completed. Review resolved verdicts below, then confirm to submit your score to GenLayer.</p>
 
-                  {/* If all rounds are finalized locally, show per-question correctness and totals */}
-                  {gameState.history.length === TOTAL_ROUNDS && gameState.history.every((h) => h.finalized) ? (
-                    <div className="mb-4">
-                      <h4 className="text-sm font-semibold mb-2">Final calculation</h4>
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {gameState.history.map((h, i) => (
-                          <div key={i} className="flex items-center justify-between bg-white/5 rounded-xl p-3">
+                  {/* Always show round summary with live finalization status */}
+                  <div className="mb-4">
+                    <h4 className="text-sm font-semibold mb-2">Round summary</h4>
+                    <p className="text-xs text-gray-400 mb-2">
+                      Finalized: {gameState.history.filter((h) => h.finalized).length}/{TOTAL_ROUNDS}
+                    </p>
+                    <div className="space-y-2 max-h-56 overflow-y-auto">
+                      {scenarioQueue.map((s, idx) => {
+                        const hist = gameState.history.find((h) => h.scenario.text === s.text && h.finalized);
+                        const prov = gameState.history.find((h) => h.scenario.text === s.text && !h.finalized);
+                        return (
+                          <div key={s.id} className="flex items-center justify-between bg-white/5 rounded-xl p-3">
                             <div className="flex-1">
-                              <p className="text-sm font-semibold truncate">{i + 1}. {h.scenario.text}</p>
-                              <p className="text-xs text-gray-400 mt-1">You: {h.playerChoice} • Consensus: {h.consensus}</p>
+                              <p className="text-sm font-semibold truncate">{idx + 1}. {s.text}</p>
+                              {hist ? (
+                                <p className="text-xs text-gray-400 mt-1">You: {hist.playerChoice} • Consensus: {hist.consensus}</p>
+                              ) : prov ? (
+                                <p className="text-xs text-gray-400 mt-1">You: {prov.playerChoice} <span className="text-yellow-300">(finalizing...)</span></p>
+                              ) : (
+                                <p className="text-xs text-gray-400 mt-1">Awaiting consensus...</p>
+                              )}
                             </div>
-                            <div className="ml-4">{h.correct ? <span className="text-green-400 font-bold">Correct</span> : <span className="text-red-400 font-bold">Wrong</span>}</div>
+                            <div className="ml-4">
+                              {hist ? (
+                                hist.correct ? <span className="text-green-400 font-bold">Correct</span> : <span className="text-red-400 font-bold">Wrong</span>
+                              ) : prov ? (
+                                <div className="flex items-center gap-1">
+                                  <div className="h-3 w-3 rounded-full border-2 border-t-transparent border-yellow-300 animate-spin" />
+                                  <span className="text-yellow-300 text-xs">Pending</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  <div className="h-3 w-3 rounded-full border-2 border-t-transparent border-white/40 animate-spin" />
+                                  <span className="text-white/40 text-xs">Waiting</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                      <div className="mt-3 grid grid-cols-3 gap-3 text-sm">
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Show totals only when all rounds are finalized */}
+                  {gameState.history.length === TOTAL_ROUNDS && gameState.history.every((h) => h.finalized) && (
+                    <div className="mb-4 p-3 bg-genlayer-blue/10 rounded-xl">
+                      <p className="text-xs text-genlayer-accent uppercase tracking-[0.3em] mb-2">Ready to submit</p>
+                      <div className="grid grid-cols-3 gap-3 text-sm">
                         <div>
                           <p className="text-xs text-gray-400">Score</p>
                           <p className="font-bold text-white">{leaderboard.score} / 100</p>
@@ -659,11 +699,6 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
                           <p className="font-bold text-white">{leaderboard.accuracy}%</p>
                         </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="mb-4 flex items-center gap-2 text-sm text-gray-300">
-                      <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-white/60 animate-spin" />
-                      <span>Waiting for consensus to finalize all rounds. Final calculation will appear here.</span>
                     </div>
                   )}
 
