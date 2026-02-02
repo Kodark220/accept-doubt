@@ -59,7 +59,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
   const [readyForNext, setReadyForNext] = useState(false);
   const [showConfirmedResults, setShowConfirmedResults] = useState(false);
   // Whether the current pending round is still waiting for consensus to finalize
-  const isConsensusPending = Boolean(pendingRound && !gameState.history.some((h) => h.scenario.text === pendingRound.scenario.text && h.finalized));
+  // (declared after `gameState` below)
 
   // Poll / timeout UI states for pending confirmations
   const [pollStartTime, setPollStartTime] = useState<number | null>(null);
@@ -74,6 +74,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
   const leaderboard = leaderboardSnapshot(gameState);
   const score = leaderboard.score;
   const currentRoundNumber = Math.min(currentIndex + 1, scenarioQueue.length);
+  const isConsensusPending = Boolean(pendingRound && !gameState.history.some((h) => h.scenario.text === pendingRound.scenario.text && h.finalized));
 
   const handleSubmitScore = async () => {
     if (!isConnected) throw new Error('No wallet');
