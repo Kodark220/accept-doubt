@@ -24,6 +24,7 @@ import {
 } from '../../utils/genlayerClient';
 
 import { toast } from 'sonner';
+import { useWallet } from '../../lib/wallet/WalletProvider';
 import { GameMode, TOTAL_ROUNDS } from './constants';
 
 type PendingRound = {
@@ -33,17 +34,10 @@ type PendingRound = {
 };
 
 export default function GameExperience({ initialMode, initialUsername, initialQueue, dailyScenario }: { initialMode: GameMode; initialUsername: string; initialQueue: ScenarioClaim[]; dailyScenario: ScenarioClaim }) {
-  // Wallet integration removed temporarily — simplified placeholders
   const modeLabel = initialMode === 'single' ? 'Single player' : 'Multiplayer';
   const contractMode = isContractMode();
 
-  const isConnected = false;
-  const walletAddress = '';
-  const activeConnector = undefined;
-  const connectors: any[] = [];
-  const isConnecting = false;
-  const connect = (_connector?: any) => {};
-  const disconnect = () => {};
+  const { address, isConnected, isLoading, connectWallet, disconnectWallet } = useWallet();
 
   const [showWalletOptions, setShowWalletOptions] = useState(false);
   const [scenarioQueue, setScenarioQueue] = useState<ScenarioClaim[]>(
@@ -84,7 +78,7 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
     setScorePending(true);
     try {
       // Submit without waiting for confirmation so UI can remain responsive
-      const result = await submitFinalScore(walletAddress, initialUsername, leaderboard.xp, gameState.correct, TOTAL_ROUNDS);
+      const result = await submitFinalScore(address as string, initialUsername, leaderboard.xp, gameState.correct, TOTAL_ROUNDS);
       if (!result) throw new Error('No result from submitFinalScore');
 
       if (result?.hash) {
@@ -388,7 +382,32 @@ export default function GameExperience({ initialMode, initialUsername, initialQu
       {/* Submit Score to Blockchain */}
       <div className="border-t border-white/10 pt-6 space-y-3">
         <p className="text-xs uppercase tracking-[0.3em] text-gray-400">Submit to GenLayer Blockchain</p>
-        <div className="w-full rounded-2xl border-2 border-dashed border-white/30 px-6 py-4 text-sm font-semibold tracking-[0.1em] text-white/70 bg-white/5">Wallet integration disabled — submission unavailable</div>
+        {!isConnected ? (
+          <div className="w-full rounded-2xl border-2 border-dashed border-white/30 px-6 py-4 text-sm font-semibold tracking-[0.1em] text-white/70 bg-white/5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-semibold">Wallet required</p>
+                <p className="text-xs text-gray-400 mt-1">Connect a wallet to submit your score to GenLayer.</p>
+              </div>
+              <div>
+                <WalletConnect />
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="w-full rounded-2xl border-2 border-white/10 px-6 py-4 text-sm text-white/90 bg-white/5">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm">Connected as <span className="font-mono">{address}</span></p>
+                <p className="text-xs text-gray-400 mt-1">You can submit your final score to the GenLayer blockchain.</p>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={handleSubmitScoreSafe} disabled={submittingScore || scorePending} className="px-3 py-2 rounded-xl bg-genlayer-blue text-white">{submittingScore ? 'Submitting...' : 'Submit Score'}</button>
+                <button onClick={() => disconnectWallet()} className="px-3 py-2 rounded-xl border border-white/10">Disconnect</button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-6 space-y-3">
